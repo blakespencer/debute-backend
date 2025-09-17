@@ -1,0 +1,181 @@
+{
+  "info": {
+    "name": "Backend API",
+    "description": "Collection for testing the Backend API with Analytics and Shopify endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Total Revenue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/total-revenue",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "total-revenue"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/order-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "order-count"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Average Order Value",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/average-order-value",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "average-order-value"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Shopify",
+      "item": [
+        {
+          "name": "Test Shopify Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shopify/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "test"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shopify/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "sync"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Orders Since Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"since\": \"2024-01-01T00:00:00Z\",\n  \"limit\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shopify/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "sync"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Synced Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shopify/orders?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "orders"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Synced Orders (Page 2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shopify/orders?limit=20&offset=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "orders"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

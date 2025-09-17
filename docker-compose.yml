@@ -1,17 +1,17 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
     build:
       context: .
-      target: builder  # Use builder stage for development
+      target: builder # Use builder stage for development
     container_name: backend-app-dev
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - DATABASE_URL=postgresql://postgres:password@db:5432/backend_dev
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     volumes:
       - .:/app
       - /app/node_modules
@@ -27,16 +27,16 @@ services:
     image: postgres:15-alpine
     container_name: backend-db-dev
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=backend_dev
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - '5432:5432'
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./prisma/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,15 +47,15 @@ services:
     image: postgres:15-alpine
     container_name: backend-test-db
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=backend_test
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_TEST_DB}
     ports:
-      - '5433:5432'
+      - "5433:5432"
     tmpfs:
-      - /var/lib/postgresql/data  # Use tmpfs for faster test database
+      - /var/lib/postgresql/data # Use tmpfs for faster test database
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5

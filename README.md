@@ -58,13 +58,13 @@ A focused backend service for analytics with a single revenue endpoint. Built wi
    git clone <your-repo>
    cd backend
    cp .env.example .env
-   docker-compose up
+   docker compose up
    ```
 
 2. **Setup database (in separate terminal)**
    ```bash
-   docker-compose run app npm run prisma:migrate
-   docker-compose run app npm run prisma:seed
+   docker compose run app npm run prisma:migrate
+   docker compose run app npm run prisma:seed
    ```
 
 ### Test the API
@@ -426,24 +426,24 @@ npm run prisma:seed     # Seed database with test data
 ### Docker
 ```bash
 # Development Environment
-docker-compose up               # Start dev environment (app + PostgreSQL + test DB)
-docker-compose up -d            # Start in detached mode
-docker-compose down             # Stop all services
-docker-compose logs app         # View application logs
+docker compose up               # Start dev environment (app + PostgreSQL + test DB)
+docker compose up -d            # Start in detached mode
+docker compose down             # Stop all services
+docker compose logs app         # View application logs
 
 # Production Environment
-docker-compose -f docker-compose.prod.yml up    # Start production environment
-docker-compose -f docker-compose.prod.yml up -d # Production detached mode
+docker compose -f docker-compose.prod.yml up    # Start production environment
+docker compose -f docker-compose.prod.yml up -d # Production detached mode
 
 # Testing in Docker
-docker-compose run app npm test           # Run all tests
-docker-compose run app npm run test:unit  # Run unit tests only
-docker-compose run app npm run test:integration # Run integration tests
+docker compose run app npm test           # Run all tests
+docker compose run app npm run test:unit  # Run unit tests only
+docker compose run app npm run test:integration # Run integration tests
 
 # Database Operations in Docker
-docker-compose run app npm run prisma:migrate   # Run migrations
-docker-compose run app npm run prisma:seed      # Seed database
-docker-compose exec db psql -U postgres -d backend_dev  # Connect to database
+docker compose run app npm run prisma:migrate   # Run migrations
+docker compose run app npm run prisma:seed      # Seed database
+docker compose exec db psql -U postgres -d backend_dev  # Connect to database
 ```
 
 ## Next Steps

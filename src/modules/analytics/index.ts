@@ -1,0 +1,1 @@
+export { createAnalyticsRouter } from './routes/analytics.routes';

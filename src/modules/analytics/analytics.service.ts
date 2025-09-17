@@ -1,35 +1,52 @@
+import { PrismaClient } from "@prisma/client";
 import { AnalyticsRepository } from "./analytics.repository";
 import { DateRange, OrderData, RevenueMetrics } from "./analytics.types";
 import { ValidationError } from "../../common/errors";
-import { Money } from "../../common/money";
 
 export class AnalyticsService {
   private repository: AnalyticsRepository;
 
-  constructor() {
-    this.repository = new AnalyticsRepository();
+  constructor(prisma: PrismaClient) {
+    this.repository = new AnalyticsRepository(prisma);
+  }
+
+  async getTotalRevenue(dateRange?: DateRange): Promise<number> {
+    if (dateRange) {
+      this.validateDateRange(dateRange);
+    }
+
+    const revenue = await this.repository.getTotalRevenue(dateRange);
+    return Number(revenue);
+  }
+
+  async getOrderCount(dateRange?: DateRange): Promise<number> {
+    if (dateRange) {
+      this.validateDateRange(dateRange);
+    }
+
+    return await this.repository.getOrderCount(dateRange);
+  }
+
+  async getAverageOrderValue(dateRange?: DateRange): Promise<number> {
+    if (dateRange) {
+      this.validateDateRange(dateRange);
+    }
+
+    const average = await this.repository.getAverageOrderValue(dateRange);
+    return Number(average);
   }
 
   async getRevenueMetrics(dateRange: DateRange): Promise<RevenueMetrics> {
     this.validateDateRange(dateRange);
 
-    const orders = await this.repository.fetchOrderTotals(dateRange);
-
-    // Use Money class for safe calculations
-    const totalRevenue = orders
-      .map((order) => new Money(order.totalAmount))
-      .reduce((sum, money) => sum.add(money), new Money(0));
-
-    const orderCount = orders.length;
-    const averageOrderValue =
-      orderCount > 0
-        ? new Money(totalRevenue.toDollars() / orderCount)
-        : new Money(0);
+    const totalRevenue = await this.getTotalRevenue(dateRange);
+    const orderCount = await this.getOrderCount(dateRange);
+    const averageOrderValue = await this.getAverageOrderValue(dateRange);
 
     return {
-      totalRevenue: totalRevenue.toDollars(),
+      totalRevenue,
       orderCount,
-      averageOrderValue: averageOrderValue.toDollars(),
+      averageOrderValue,
       period: dateRange,
     };
   }

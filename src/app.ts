@@ -2,10 +2,13 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import { AnalyticsController } from "./modules/analytics/analytics.controller";
+import { PrismaClient } from "@prisma/client";
+import { createAnalyticsRouter } from "./modules/analytics";
+import { createShopifyRouter } from "./modules/shopify";
 import { AppError } from "./common/errors";
 
 const app = express();
+const prisma = new PrismaClient();
 
 // Middleware
 app.use(helmet());
@@ -13,11 +16,9 @@ app.use(cors());
 app.use(morgan("combined"));
 app.use(express.json());
 
-// Controllers
-const analyticsController = new AnalyticsController();
-
 // Routes
-app.get("/api/analytics/revenue", analyticsController.getRevenue);
+app.use("/analytics", createAnalyticsRouter(prisma));
+app.use("/shopify", createShopifyRouter(prisma));
 
 // Health check
 app.get("/health", (req, res) => {
