@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  orderId     String   @unique @map("order_id")
+  orderDate   DateTime @map("order_date")
+  totalAmount Decimal @db.Decimal(10, 2) // 10 digits total, 2 decimal places
+  status      String   @default("completed")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+
+  @@map("orders")
+}
+
+model ShopifyStore {
+  id          String @id @default(cuid())
+  shopDomain  String @unique           
+  accessToken String                   
+  lastSyncAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  orders      ShopifyOrder[]
+}
+
+model ShopifyOrder {
+  id                     String @id @default(cuid())
+  shopifyOrderId         String @unique @map("shopify_order_id")
+  legacyResourceId       String @map("legacy_resource_id")        // UnsignedInt64 as String
+  number                 Int    @map("number")                    
+  name                   String
+  
+  // Currency context - CONFIRMED from API docs
+  currencyCode           String @map("currency_code")             
+  presentmentCurrencyCode String @map("presentment_currency_code") 
+  
+  // Customer Info - CONFIRMED from API docs
+  email                  String?
+  phone                  String?
+  customerAcceptsMarketing Boolean @default(false) @map("customer_accepts_marketing")
+  
+  // FLATTENED MoneyBag: currentTotalPriceSet 
+  currentTotalPriceAmount              Decimal @map("current_total_price_amount")                
+  currentTotalPricePresentmentAmount   Decimal? @map("current_total_price_presentment_amount")   
+  
+  // FLATTENED MoneyBag: currentSubtotalPriceSet
+  currentSubtotalPriceAmount           Decimal @map("current_subtotal_price_amount")             
+  currentSubtotalPricePresentmentAmount Decimal? @map("current_subtotal_price_presentment_amount") 
+  
+  // FLATTENED MoneyBag: currentTotalTaxSet
+  currentTotalTaxAmount                Decimal? @map("current_total_tax_amount")                 
+  currentTotalTaxPresentmentAmount     Decimal? @map("current_total_tax_presentment_amount")     
+  
+  // Status Fields - CONFIRMED from API docs
+  displayFinancialStatus     String @map("display_financial_status")
+  displayFulfillmentStatus   String @map("display_fulfillment_status")
+  confirmed                  Boolean @default(false)
+  closed                     Boolean @default(false)
+  cancelledAt                DateTime? @map("cancelled_at")
+  cancelReason               String? @map("cancel_reason")
+  
+  // Additional Fields - CONFIRMED from API docs
+  taxesIncluded              Boolean @default(false) @map("taxes_included")
+  test                       Boolean @default(false)
+  
+  // Dates - CONFIRMED from API docs
+  createdAt                  DateTime @map("created_at")
+  processedAt                DateTime @map("processed_at")
+  updatedAt                  DateTime @updatedAt
+  
+  // Relationships
+  storeId                    String @map("store_id")
+  store                      ShopifyStore @relation(fields: [storeId], references: [id])
+  lineItems                  ShopifyLineItem[]
+  
+  @@map("shopify_orders")
+}
+
+model ShopifyLineItem {
+  id                String @id @default(cuid())
+  shopifyLineItemId String @unique @map("shopify_line_item_id")
+  
+  // Product Info
+  name              String
+  variantTitle      String? @map("variant_title")
+  productId         String? @map("product_id")
+  variantId         String? @map("variant_id")
+  sku               String?
+  
+  // Quantities & Pricing
+  quantity          Int
+  currentQuantity   Int @map("current_quantity")
+  
+  // FLATTENED MoneyBag: Line item pricing (these would be originalUnitPriceSet, etc.)
+  originalUnitPriceAmount              Decimal @map("original_unit_price_amount")                
+  originalUnitPricePresentmentAmount   Decimal? @map("original_unit_price_presentment_amount")   
+  
+  originalTotalPriceAmount             Decimal @map("original_total_price_amount")               
+  originalTotalPricePresentmentAmount  Decimal? @map("original_total_price_presentment_amount")  
+  
+  // Fulfillment
+  requiresShipping  Boolean @default(true) @map("requires_shipping")
+  
+  // Relationships
+  orderId           String @map("order_id")
+  order             ShopifyOrder @relation(fields: [orderId], references: [id])
+  
+  @@map("shopify_line_items")
+}
