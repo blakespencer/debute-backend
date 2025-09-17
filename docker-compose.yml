@@ -5,7 +5,7 @@ services:
     build:
       context: .
       target: builder # Use builder stage for development
-    container_name: backend-app-dev
+    container_name: debute-app-dev
     ports:
       - "3000:3000"
     environment:
@@ -21,11 +21,11 @@ services:
       db:
         condition: service_healthy
     networks:
-      - backend-network
+      - debute-network
 
   db:
     image: postgres:15-alpine
-    container_name: backend-db-dev
+    container_name: debute-db-dev
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -41,11 +41,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - backend-network
+      - debute-network
 
   test-db:
     image: postgres:15-alpine
-    container_name: backend-test-db
+    container_name: debute-test-db
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -60,7 +60,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - backend-network
+      - debute-network
 
   # Optional: Redis for caching (if needed in future)
   # redis:
@@ -75,5 +75,5 @@ volumes:
   postgres_data:
 
 networks:
-  backend-network:
+  debute-network:
     driver: bridge

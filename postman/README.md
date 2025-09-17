@@ -1,6 +1,6 @@
-# Postman Collection for Backend API
+# Postman Collection for Debute Backend API
 
-This folder contains Postman collection and environment files for testing the Backend API.
+This folder contains Postman collection and environment files for testing the Debute Backend API.
 
 ## Files
 

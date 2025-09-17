@@ -1,13 +1,16 @@
-# Analytics Backend API
+# Debute Backend API
 
-A focused backend service for analytics with a single revenue endpoint. Built with Node.js, Express, TypeScript, and Prisma.
+A comprehensive backend service for Debute with analytics and Shopify integration. Built with Node.js, Express, TypeScript, and Prisma.
 
 ## Features
 
-- 📊 Revenue analytics endpoint
-- 🔍 Date range filtering
+- 📊 Revenue analytics endpoints (total revenue, order count, average order value)
+- 🛒 Shopify integration with order synchronization
+- 🔍 Date range filtering and pagination
 - 💾 PostgreSQL with Prisma ORM
 - 🛡️ Type-safe database operations
+- 🔄 GraphQL API client for Shopify
+- 🧪 Comprehensive testing infrastructure
 - ⚡ Fast development with hot reload
 - 🎯 Single feature focus (expandable)
 
