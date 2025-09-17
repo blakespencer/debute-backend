@@ -1,2 +1,70 @@
-// Jest test setup configuration
-// This file runs before all tests
+import { PrismaClient } from '@prisma/client';
+import { execSync } from 'child_process';
+import { getDatabaseUrl } from '../src/common/database';
+
+// Use the same database configuration as the app
+const testDatabaseUrl = getDatabaseUrl();
+
+// Ensure we're in test mode
+if (process.env.NODE_ENV !== 'test') {
+  console.warn('⚠️  NODE_ENV is not set to "test". Database:', testDatabaseUrl);
+}
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: testDatabaseUrl
+    }
+  }
+});
+
+// Global test setup
+beforeAll(async () => {
+  // Reset test database before all tests
+  try {
+    await resetTestDatabase();
+  } catch (error) {
+    console.error('Failed to reset test database:', error);
+    throw error;
+  }
+});
+
+// Cleanup after all tests
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
+async function resetTestDatabase() {
+  // Reset test database and apply migrations
+  // Uncomment for debugging: console.log('🧪 Resetting test database...');
+
+  try {
+    // Simple approach: just deploy migrations and clean data
+    execSync('npx prisma migrate deploy', {
+      stdio: 'pipe',
+      env: {
+        ...process.env,
+        DATABASE_URL: testDatabaseUrl
+      }
+    });
+
+    // Clean all test data manually
+    await prisma.shopifyLineItem.deleteMany();
+    await prisma.shopifyOrder.deleteMany();
+    await prisma.shopifyStore.deleteMany();
+    await prisma.order.deleteMany();
+
+  } catch (error) {
+    console.log('⚠️ Database setup issue, continuing with clean-only approach');
+    // If migration fails, just clean the data
+    await prisma.shopifyLineItem.deleteMany();
+    await prisma.shopifyOrder.deleteMany();
+    await prisma.shopifyStore.deleteMany();
+    await prisma.order.deleteMany();
+  }
+
+  // Uncomment for debugging: console.log('✅ Test database reset complete');
+}
+
+// Export for use in tests
+export { prisma };

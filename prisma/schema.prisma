@@ -22,6 +22,10 @@ model Order {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  // Performance indexes for analytics queries
+  @@index([orderDate])
+  @@index([status])
+  @@index([status, orderDate])
 
   @@map("orders")
 }
@@ -86,7 +90,16 @@ model ShopifyOrder {
   storeId                    String @map("store_id")
   store                      ShopifyStore @relation(fields: [storeId], references: [id])
   lineItems                  ShopifyLineItem[]
-  
+
+  // Ensure order names are unique per store (satisfies Shopify's documentation)
+  @@unique([storeId, name], name: "unique_order_per_store")
+
+  // Performance indexes for analytics queries
+  @@index([createdAt])
+  @@index([displayFinancialStatus])
+  @@index([storeId, createdAt])
+  @@index([displayFinancialStatus, createdAt])
+
   @@map("shopify_orders")
 }
 

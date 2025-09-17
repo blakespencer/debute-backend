@@ -1,10 +1,9 @@
-version: "3.8"
-
 services:
   app:
     build:
       context: .
       target: builder # Use builder stage for development
+    image: debute-backend:dev
     container_name: debute-app-dev
     ports:
       - "3000:3000"

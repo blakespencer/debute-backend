@@ -4,15 +4,15 @@ A comprehensive backend service for Debute with analytics and Shopify integratio
 
 ## Features
 
-- 📊 Revenue analytics endpoints (total revenue, order count, average order value)
-- 🛒 Shopify integration with order synchronization
-- 🔍 Date range filtering and pagination
-- 💾 PostgreSQL with Prisma ORM
-- 🛡️ Type-safe database operations
-- 🔄 GraphQL API client for Shopify
-- 🧪 Comprehensive testing infrastructure
-- ⚡ Fast development with hot reload
-- 🎯 Single feature focus (expandable)
+- 📊 **Revenue Analytics**: Complete analytics endpoints with date filtering (total revenue, order count, average order value)
+- 🛒 **Shopify Integration**: Full order synchronization with GraphQL API client and incremental sync support
+- 🔄 **Dual Data Sources**: Analytics work with both Shopify data and fallback basic orders
+- 🗄️ **Advanced Database**: PostgreSQL with Prisma ORM, performance indexes, and comprehensive schema
+- 🛡️ **Type Safety**: Full TypeScript implementation with strict type checking
+- 🧪 **Testing Infrastructure**: Integration tests with Docker support and comprehensive fixtures
+- 📋 **API Documentation**: Complete Postman collection with all endpoints and examples
+- ⚡ **Development Ready**: Hot reload, Docker containerization, and development tooling
+- 🎯 **Production Architecture**: Modular design with proper separation of concerns
 
 ## Prerequisites
 
@@ -82,39 +82,71 @@ Create a `.env` file in the root directory:
 
 ```env
 PORT=3000
-DATABASE_URL="postgresql://username@localhost:5432/analytics_db"
+DATABASE_URL="postgresql://postgres:securepassword123@db:5432/backend_dev"
+DATABASE_URL_TEST="postgresql://postgres:securepassword123@test-db:5432/backend_test"
 NODE_ENV=development
+
+# Shopify Integration (optional - required for sync functionality)
+SHOPIFY_SHOP_DOMAIN="your-store.myshopify.com"
+SHOPIFY_ACCESS_TOKEN="your-access-token"
 ```
 
 ## API Endpoints
-
-### Revenue Analytics
-
-```
-GET /api/analytics/revenue?start=YYYY-MM-DD&end=YYYY-MM-DD
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "totalRevenue": 166.49,
-    "orderCount": 4,
-    "averageOrderValue": 41.62,
-    "period": {
-      "start": "2024-01-01",
-      "end": "2024-12-31"
-    }
-  }
-}
-```
 
 ### Health Check
 
 ```
 GET /health
+```
+
+### Analytics Endpoints
+
+All analytics endpoints support optional date range filtering:
+
+```
+GET /analytics/total-revenue?start=YYYY-MM-DD&end=YYYY-MM-DD
+GET /analytics/order-count?start=YYYY-MM-DD&end=YYYY-MM-DD
+GET /analytics/average-order-value?start=YYYY-MM-DD&end=YYYY-MM-DD
+```
+
+**Example Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalRevenue": 350.00
+  }
+}
+```
+
+### Shopify Integration Endpoints
+
+```
+GET /shopify/test                    # Test Shopify API connection
+POST /shopify/sync                   # Sync orders from Shopify
+GET /shopify/orders?limit=20&offset=0 # Get synced orders with pagination
+```
+
+**Sync Request Body:**
+```json
+{
+  "since": "2024-01-01T00:00:00Z",  // Optional: sync since specific date
+  "limit": 100                       // Optional: limit number of orders
+}
+```
+
+**Sync Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "ordersProcessed": 25,
+    "ordersCreated": 15,
+    "ordersUpdated": 10,
+    "errors": []
+  }
+}
 ```
 
 ## Database
@@ -210,17 +242,19 @@ npx prisma generate        # Ensures client is up to date
 
 ### Database Schema
 
-```prisma
-model Order {
-  id          String   @id @default(cuid())
-  orderId     String   @unique @map("order_id")
-  totalAmount Decimal  @map("total_amount")
-  orderDate   DateTime @map("order_date")
-  status      String   @default("completed")
+The application uses a comprehensive schema supporting both basic orders and detailed Shopify integration:
 
-  @@map("orders")
-}
-```
+**Core Models:**
+- `Order` - Basic orders for fallback analytics
+- `ShopifyStore` - Shopify store configurations
+- `ShopifyOrder` - Detailed Shopify order data with flattened MoneyBag fields
+- `ShopifyLineItem` - Order line items with pricing details
+
+**Key Features:**
+- Decimal precision for all monetary values
+- Performance indexes on frequently queried fields
+- Unique constraints ensuring data integrity
+- Optimized for analytics queries with proper indexing
 
 ## Development Workflow
 
@@ -296,11 +330,20 @@ model Order {
 # Run health check
 curl http://localhost:3000/health
 
-# Test revenue endpoint
-curl "http://localhost:3000/api/analytics/revenue?start=2024-01-01&end=2024-12-31"
+# Test analytics endpoints
+curl "http://localhost:3000/analytics/total-revenue?start=2024-01-01&end=2024-12-31"
+curl "http://localhost:3000/analytics/order-count"
+curl "http://localhost:3000/analytics/average-order-value"
 
-# Run tests (when added)
-npm test
+# Test Shopify integration (requires environment variables)
+curl http://localhost:3000/shopify/test
+curl -X POST http://localhost:3000/shopify/sync -H "Content-Type: application/json" -d '{"limit": 10}'
+curl "http://localhost:3000/shopify/orders?limit=5"
+
+# Run comprehensive tests
+npm test                           # Run all tests
+npm run test:integration:docker    # Run integration tests in Docker (recommended)
+npm run test:coverage              # Run tests with coverage
 ```
 
 ### Debugging
@@ -457,14 +500,25 @@ docker compose run app npm run prisma:seed      # Seed database
 docker compose exec db psql -U postgres -d backend_dev  # Connect to database
 ```
 
-## Next Steps
+## Current Status & Next Steps
 
-- [ ] Add authentication
-- [ ] Add more analytics endpoints
-- [ ] Add comprehensive testing
-- [ ] Add API documentation (Swagger)
-- [ ] Add logging and monitoring
-- [ ] Add caching layer
+### ✅ Completed
+- Complete Shopify integration with order synchronization
+- Analytics endpoints with dual data source support (Shopify + fallback)
+- Comprehensive database schema with performance optimization
+- Integration testing infrastructure with Docker support
+- Complete API documentation via Postman collection
+
+### 🚧 In Progress
+- Unit test implementation (scaffolding exists but tests are empty)
+- Enhanced error handling and logging
+
+### 📋 Planned
+- Authentication system
+- Redis caching layer for analytics
+- Advanced analytics (month-over-month comparisons, KPI calculations)
+- Additional integrations (Meta Ads, Google Analytics 4)
+- Performance monitoring and optimization
 
 ## Troubleshooting
 

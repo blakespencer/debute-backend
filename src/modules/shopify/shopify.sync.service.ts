@@ -4,9 +4,17 @@ import { ShopifyClient } from './shopify.client';
 import { ShopifyRepository } from './shopify.repository';
 import { SyncOptions, SyncResult, ShopifyOrder as ApiOrder, ShopifyLineItem as ApiLineItem } from './shopify.types';
 import { AppError } from '../../common/errors';
+import {
+  ShopifyStoreError,
+  ShopifySyncError,
+  ShopifyApiError,
+  ShopifyRateLimitError
+} from './shopify.errors';
+import { createLogger } from '../../common/logger';
 
 export class ShopifySyncService {
   private repository: ShopifyRepository;
+  private logger = createLogger('ShopifySyncService');
 
   constructor(private prisma: PrismaClient) {
     this.repository = new ShopifyRepository(prisma);
@@ -15,32 +23,54 @@ export class ShopifySyncService {
   async syncOrders(options: SyncOptions): Promise<SyncResult> {
     const { storeId, since, limit = 50 } = options;
 
-    const store = await this.repository.findStoreById(storeId);
-    if (!store) {
-      throw new AppError('Store not found', 404);
-    }
+    return this.logger.time('syncOrders', async () => {
+      this.logger.info('Starting Shopify sync', { storeId, since, limit });
 
-    const client = new ShopifyClient(store.shopDomain, store.accessToken);
+      const store = await this.repository.findStoreById(storeId);
+      if (!store) {
+        throw new ShopifyStoreError(`Store not found: ${storeId}`);
+      }
 
-    const syncSince = since || store.lastSyncAt || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const client = new ShopifyClient(store.shopDomain, store.accessToken);
 
-    const result: SyncResult = {
-      ordersProcessed: 0,
-      ordersCreated: 0,
-      ordersUpdated: 0,
-      errors: [],
-    };
+      const syncSince = since || store.lastSyncAt || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      this.logger.debug('Sync date calculated', {
+        providedSince: since,
+        storeLastSync: store.lastSyncAt,
+        finalSyncSince: syncSince,
+        syncSinceISO: syncSince.toISOString()
+      });
 
-    try {
-      let hasNextPage = true;
-      let cursor: string | undefined;
+      const result: SyncResult = {
+        ordersProcessed: 0,
+        ordersCreated: 0,
+        ordersUpdated: 0,
+        errors: [],
+      };
 
-      while (hasNextPage) {
-        const response = await client.fetchOrders({
-          first: Math.min(limit, 50),
-          after: cursor,
-          since: syncSince.toISOString(),
-        });
+      try {
+        let hasNextPage = true;
+        let cursor: string | undefined;
+
+        while (hasNextPage) {
+          this.logger.debug('Fetching orders from Shopify API', {
+            first: Math.min(limit, 50),
+            after: cursor,
+            since: syncSince.toISOString(),
+            page: Math.floor(result.ordersProcessed / 50) + 1
+          });
+
+          const response = await client.fetchOrders({
+            first: Math.min(limit, 50),
+            after: cursor,
+            since: syncSince.toISOString(),
+          });
+
+          this.logger.debug('API response received', {
+            ordersCount: response.orders.nodes.length,
+            hasNextPage: response.orders.pageInfo.hasNextPage,
+            endCursor: response.orders.pageInfo.endCursor
+          });
 
         for (const order of response.orders.nodes) {
           try {
@@ -59,21 +89,60 @@ export class ShopifySyncService {
           }
         }
 
-        hasNextPage = response.orders.pageInfo.hasNextPage;
-        cursor = response.orders.pageInfo.endCursor;
+          hasNextPage = response.orders.pageInfo.hasNextPage;
+          cursor = response.orders.pageInfo.endCursor;
 
-        if (result.ordersProcessed >= limit) {
-          break;
+          this.logger.debug('Page completed', {
+            ordersProcessedThisPage: response.orders.nodes.length,
+            totalOrdersProcessed: result.ordersProcessed,
+            limit: limit,
+            hasNextPage: hasNextPage
+          });
+
+          if (result.ordersProcessed >= limit) {
+            this.logger.info('Limit reached, stopping sync', { limit, processed: result.ordersProcessed });
+            break;
+          }
+
+          // Rate limiting: Wait 1 second between API calls to avoid throttling
+          if (hasNextPage) {
+            this.logger.debug('Waiting to avoid rate limiting', { delayMs: 1000 });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
+
+        this.logger.info('Sync completed successfully', { result });
+        await this.repository.updateStoreLastSync(storeId);
+
+      } catch (error) {
+        this.logger.error('Sync operation failed', {
+          error: error instanceof Error ? error : new Error(String(error)),
+          storeId,
+          partialResult: result
+        });
+
+        // Handle specific Shopify errors
+        if (error instanceof ShopifyRateLimitError) {
+          throw new ShopifySyncError(
+            `Sync failed due to rate limiting: ${error.message}`,
+            result
+          );
+        }
+
+        if (error instanceof ShopifyApiError) {
+          throw new ShopifySyncError(
+            `Sync failed due to API error: ${error.message}`,
+            result
+          );
+        }
+
+        // Generic sync error
+        const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
+        throw new ShopifySyncError(`Sync operation failed: ${errorMessage}`, result);
       }
 
-      await this.repository.updateStoreLastSync(storeId);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
-      result.errors.push(`Sync failed: ${errorMessage}`);
-    }
-
-    return result;
+      return result;
+    }, { storeId, since, limit });
   }
 
   private async processOrder(apiOrder: ApiOrder, storeId: string): Promise<void> {
@@ -138,10 +207,15 @@ export class ShopifySyncService {
   }
 
   private mapApiOrderToDb(apiOrder: ApiOrder, storeId: string) {
+    // Extract order number from name field (Shopify GraphQL limitation)
+    // Examples: "#1234" → 1234, "SW-#1298" → 1298, "EN1001" → 1001
+    const numberMatch = apiOrder.name.match(/\d+/);
+    const orderNumber = numberMatch ? parseInt(numberMatch[0]) : 0;
+
     return {
       shopifyOrderId: apiOrder.id,
       legacyResourceId: apiOrder.legacyResourceId,
-      number: parseInt(apiOrder.name.replace('#', '')),
+      number: orderNumber, // Parsed from name due to GraphQL API limitation
       name: apiOrder.name,
       currencyCode: apiOrder.currencyCode,
       presentmentCurrencyCode: apiOrder.presentmentCurrencyCode,
@@ -200,12 +274,25 @@ export class ShopifySyncService {
   }
 
   async testStoreConnection(storeId: string): Promise<boolean> {
-    const store = await this.repository.findStoreById(storeId);
-    if (!store) {
-      return false;
-    }
+    return this.logger.time('testStoreConnection', async () => {
+      this.logger.debug('Testing store connection', { storeId });
 
-    const client = new ShopifyClient(store.shopDomain, store.accessToken);
-    return client.testConnection();
+      const store = await this.repository.findStoreById(storeId);
+      if (!store) {
+        this.logger.warn('Store not found for connection test', { storeId });
+        return false;
+      }
+
+      const client = new ShopifyClient(store.shopDomain, store.accessToken);
+      const isConnected = await client.testConnection();
+
+      this.logger.info('Store connection test completed', {
+        storeId,
+        shopDomain: store.shopDomain,
+        connected: isConnected
+      });
+
+      return isConnected;
+    }, { storeId });
   }
 }

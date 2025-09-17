@@ -2,13 +2,12 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import { PrismaClient } from "@prisma/client";
 import { createAnalyticsRouter } from "./modules/analytics";
 import { createShopifyRouter } from "./modules/shopify";
 import { AppError } from "./common/errors";
+import { prisma } from "./common/database";
 
 const app = express();
-const prisma = new PrismaClient();
 
 // Middleware
 app.use(helmet());
