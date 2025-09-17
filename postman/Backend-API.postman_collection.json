@@ -42,6 +42,29 @@
           "response": []
         },
         {
+          "name": "Get Total Revenue (Date Range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/total-revenue?start=2024-01-01&end=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "total-revenue"],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Order Count",
           "request": {
             "method": "GET",
@@ -55,6 +78,29 @@
           "response": []
         },
         {
+          "name": "Get Order Count (Date Range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/order-count?start=2024-01-01&end=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "order-count"],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Average Order Value",
           "request": {
             "method": "GET",
@@ -63,6 +109,29 @@
               "raw": "{{baseUrl}}/analytics/average-order-value",
               "host": ["{{baseUrl}}"],
               "path": ["analytics", "average-order-value"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Average Order Value (Date Range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/average-order-value?start=2024-01-01&end=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "average-order-value"],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end",
+                  "value": "2024-12-31"
+                }
+              ]
             }
           },
           "response": []

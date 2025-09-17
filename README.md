@@ -416,6 +416,10 @@ npm run test:unit       # Run unit tests only
 npm run test:integration # Run integration tests only
 npm run test:watch      # Run tests in watch mode
 npm run test:coverage   # Run tests with coverage report
+
+# Docker Integration Testing
+npm run test:integration:docker     # Run integration tests in Docker (recommended)
+npm run test:coverage:integration   # Run integration tests with coverage in Docker
 ```
 
 ### Database
@@ -442,6 +446,10 @@ docker compose -f docker-compose.prod.yml up -d # Production detached mode
 docker compose run app npm test           # Run all tests
 docker compose run app npm run test:unit  # Run unit tests only
 docker compose run app npm run test:integration # Run integration tests
+
+# Integration Testing (Recommended Workflow)
+npm run test:integration:docker           # Run integration tests in Docker container
+npm run test:coverage:integration         # Run integration tests with coverage in Docker
 
 # Database Operations in Docker
 docker compose run app npm run prisma:migrate   # Run migrations

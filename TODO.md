@@ -24,6 +24,8 @@ This file tracks project-level development tasks and future enhancements.
 7. ⏳ **Testing**: Test the sync with real Shopify data
 8. ⏳ **Error Handling**: Add robust error handling and logging for sync failures
 9. ⏳ **Analytics Integration**: Connect synced Shopify data to existing analytics endpoints
+10. ⏳ **Performance Baseline**: Add basic response time logging to analytics endpoints
+11. ⏳ **Database Optimization**: Add indexes on frequently queried fields (orderDate, status)
 
 **Routes Available**:
 - `POST /shopify/sync` - Trigger order sync from Shopify
@@ -50,6 +52,7 @@ This file tracks project-level development tasks and future enhancements.
 - [x] Create test utilities and helpers scaffolding
 - [x] Set up test fixtures and mocks scaffolding
 - [x] Configure test coverage reporting
+- [x] Configure Docker integration testing with isolated test environment
 - [ ] Write actual test implementations for Shopify module
 - [ ] Add test database seeding utilities
 
@@ -60,26 +63,69 @@ This file tracks project-level development tasks and future enhancements.
 - [ ] Set up automated testing in CI
 - [ ] Add code quality badges
 
-## Backlog
+## Next Up (Priority Order)
 
-### Features
+### 1. Complete Current Shopify Integration 🔥
+- [ ] Testing: Test sync with real Shopify data
+- [ ] Error Handling: Add robust error handling and logging for sync failures
+- [ ] Performance Baseline: Add basic response time logging to analytics endpoints
+- [ ] Database Optimization: Add indexes on frequently queried fields (orderDate, status)
+
+### 2. Foundation Analytics (Using Existing Shopify Data) 🔥
+- [ ] Enhanced analytics endpoints with date filtering
+- [ ] Basic KPI calculations: Net Sales, AOV, Units Sold, Return Rate
+- [ ] Redis caching layer for analytics queries
+- [ ] Analytics integration with existing Shopify order data
+- [ ] Basic comparative analytics (month-over-month)
+
+### 3. External Data Integrations 📊
+- [ ] **Meta Ads API**: campaign data, spend, ROAS, CAC metrics
+- [ ] **Google Analytics 4 API**: sessions, traffic sources, funnel data
+- [ ] **Swap Returns Platform**: return data with reasons and SKU details
+- [ ] **Enhanced Shopify Data**: customers, inventory, sessions (if available)
+
+## Future Roadmap (6+ Month Vision)
+
+### 4. Complete DTC Reporting Platform 🎯
+**Goal**: Automated Weekly Snapshots & Monthly Deep Dives for fashion retail
+
+**Core Analytics Engine**:
+- [ ] Financial metrics: Gross Sales, Net Sales, COGS, Gross Margin %, Contribution Margin
+- [ ] Customer analytics: LTV, Repeat Purchase Rate, New vs Returning attribution
+- [ ] Marketing attribution: Multi-touch attribution (Shopify vs Meta vs GA4)
+- [ ] Product analytics: Top products, size performance, sell-through rates, collection breakdowns
+- [ ] Inventory management: Weeks of Cover, low stock alerts, sell-through analysis
+
+**Reporting & Alerts**:
+- [ ] Weekly Snapshot Generator (tactical, 1-screen format with executive summary)
+- [ ] Monthly Deep Dive Generator (strategic with comprehensive breakdowns)
+- [ ] Automated alert system with business thresholds (conversion drops, ROAS issues, stock alerts)
+- [ ] Multi-format export (Markdown, JSON, potentially PDF/Excel)
+- [ ] British English formatting with GBP currency and percentage standards
+
+### 5. Advanced Features (Long-term) 🚀
+- [ ] Cohort analysis and customer segmentation
+- [ ] Predictive analytics and forecasting
+- [ ] Real-time streaming analytics
+- [ ] Custom dashboard builder
+- [ ] Performance monitoring with sub-100ms SLA tracking
+- [ ] Machine learning integration for trend analysis
+
+## Supporting Infrastructure
+
+### Core Platform Features
 - [ ] Add authentication system
 - [ ] Implement rate limiting
 - [ ] Add API documentation (Swagger/OpenAPI)
 - [ ] Add logging and monitoring
-- [ ] Add caching layer (Redis)
-- [ ] Add more analytics endpoints
 
-### Infrastructure
+### DevOps & Infrastructure
 - [ ] Set up staging environment
 - [ ] Configure automated backups
 - [ ] Add health check endpoints
 - [ ] Set up monitoring and alerting
 - [ ] Add performance metrics
-
-### Technical Debt
 - [ ] Add comprehensive error logging
-- [ ] Optimize database queries
 - [ ] Add database migrations strategy
 - [ ] Review and optimize Docker images
 - [ ] Add security scanning
