@@ -89,6 +89,16 @@ class Logger {
   }
 
   /**
+   * Log an error with unknown type handling
+   */
+  errorWithUnknown(message: string, error: unknown, context?: Omit<LogContext, 'error'>): void {
+    this.error(message, {
+      ...context,
+      error: error instanceof Error ? error : new Error(String(error))
+    });
+  }
+
+  /**
    * Create a child logger with default context
    */
   child(defaultContext: LogContext): Logger {

@@ -11,6 +11,16 @@ npm run build    # Compile TypeScript to JavaScript
 npm run start    # Start production server (requires build)
 ```
 
+### Docker Development
+```bash
+# IMPORTANT: Always use "docker compose" (NOT "docker-compose")
+docker compose up --build    # Start development environment with hot reload
+docker compose up -d         # Start in background (detached mode)
+docker compose down          # Stop all services
+docker compose logs -f app   # View application logs
+docker compose exec app sh   # Access container shell
+```
+
 ### Code Quality
 ```bash
 npm run lint     # Run ESLint to check code quality and style

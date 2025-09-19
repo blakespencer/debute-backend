@@ -48,18 +48,36 @@ async function resetTestDatabase() {
       }
     });
 
-    // Clean all test data manually
+    // Clean all test data manually (reverse dependency order)
+    // SWAP data cleanup
+    await prisma.swapReturnReason.deleteMany();
+    await prisma.swapProduct.deleteMany();
+    await prisma.swapReturn.deleteMany();
+    await prisma.swapStore.deleteMany();
+
+    // Shopify data cleanup
     await prisma.shopifyLineItem.deleteMany();
     await prisma.shopifyOrder.deleteMany();
     await prisma.shopifyStore.deleteMany();
+
+    // Basic orders cleanup
     await prisma.order.deleteMany();
 
   } catch (error) {
     console.log('⚠️ Database setup issue, continuing with clean-only approach');
-    // If migration fails, just clean the data
+    // If migration fails, just clean the data (reverse dependency order)
+    // SWAP data cleanup
+    await prisma.swapReturnReason.deleteMany();
+    await prisma.swapProduct.deleteMany();
+    await prisma.swapReturn.deleteMany();
+    await prisma.swapStore.deleteMany();
+
+    // Shopify data cleanup
     await prisma.shopifyLineItem.deleteMany();
     await prisma.shopifyOrder.deleteMany();
     await prisma.shopifyStore.deleteMany();
+
+    // Basic orders cleanup
     await prisma.order.deleteMany();
   }
 

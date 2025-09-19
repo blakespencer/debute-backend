@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { analyticsFixtures } from '../fixtures/analytics.fixtures';
+import { swapFixtures } from '../fixtures/swap.fixtures';
 import { getDatabaseUrl } from '../../../src/common/database';
 
 // Use the same database configuration as the app
@@ -17,9 +18,18 @@ export const testHelpers = {
   // Clean database - removes all test data (correct order for foreign keys)
   async cleanDatabase() {
     // Delete in reverse dependency order to avoid foreign key constraints
+    // SWAP data cleanup
+    await prisma.swapReturnReason.deleteMany();
+    await prisma.swapProduct.deleteMany();
+    await prisma.swapReturn.deleteMany();
+    await prisma.swapStore.deleteMany();
+
+    // Shopify data cleanup
     await prisma.shopifyLineItem.deleteMany();
     await prisma.shopifyOrder.deleteMany();
     await prisma.shopifyStore.deleteMany();
+
+    // Basic orders cleanup
     await prisma.order.deleteMany();
   },
 
@@ -70,11 +80,113 @@ export const testHelpers = {
     return { store, orders: [order1, order2] };
   },
 
-  // Seed all test data (basic orders + Shopify data)
+  // Seed SWAP data (store + returns + products + return reasons)
+  async seedSwapData() {
+    // Create SWAP store first
+    const swapStore = await prisma.swapStore.create({
+      data: swapFixtures.testSwapStore,
+    });
+
+    // Create SWAP returns with store relationship
+    const return1 = await prisma.swapReturn.create({
+      data: {
+        ...swapFixtures.swapReturns[0],
+        storeId: swapStore.id,
+      },
+    });
+
+    const return2 = await prisma.swapReturn.create({
+      data: {
+        ...swapFixtures.swapReturns[1],
+        storeId: swapStore.id,
+      },
+    });
+
+    const return3 = await prisma.swapReturn.create({
+      data: {
+        ...swapFixtures.swapReturns[2],
+        storeId: swapStore.id,
+      },
+    });
+
+    // Create SWAP products for each return
+    await prisma.swapProduct.create({
+      data: {
+        ...swapFixtures.swapProducts[0],
+        returnId: return1.id,
+      },
+    });
+
+    await prisma.swapProduct.create({
+      data: {
+        ...swapFixtures.swapProducts[1],
+        returnId: return1.id,
+      },
+    });
+
+    await prisma.swapProduct.create({
+      data: {
+        ...swapFixtures.swapProducts[2],
+        returnId: return2.id,
+      },
+    });
+
+    await prisma.swapProduct.create({
+      data: {
+        ...swapFixtures.swapProducts[3],
+        returnId: return2.id,
+      },
+    });
+
+    await prisma.swapProduct.create({
+      data: {
+        ...swapFixtures.swapProducts[4],
+        returnId: return3.id,
+      },
+    });
+
+    // Create return reasons for each return
+    await prisma.swapReturnReason.create({
+      data: {
+        ...swapFixtures.swapReturnReasons[0],
+        returnId: return1.id,
+      },
+    });
+
+    await prisma.swapReturnReason.create({
+      data: {
+        ...swapFixtures.swapReturnReasons[1],
+        returnId: return2.id,
+      },
+    });
+
+    await prisma.swapReturnReason.create({
+      data: {
+        ...swapFixtures.swapReturnReasons[2],
+        returnId: return2.id,
+      },
+    });
+
+    await prisma.swapReturnReason.create({
+      data: {
+        ...swapFixtures.swapReturnReasons[3],
+        returnId: return3.id,
+      },
+    });
+
+    return {
+      swapStore,
+      returns: [return1, return2, return3],
+    };
+  },
+
+  // Seed all test data (basic orders + Shopify data + SWAP data)
   async seedAllTestData() {
     await this.cleanDatabase();
     await this.seedBasicOrders();
-    return await this.seedShopifyData();
+    const shopifyData = await this.seedShopifyData();
+    const swapData = await this.seedSwapData();
+    return { ...shopifyData, ...swapData };
   },
 
   // Wait for async operations (useful for testing)

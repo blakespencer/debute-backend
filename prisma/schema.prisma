@@ -134,3 +134,106 @@ model ShopifyLineItem {
   
   @@map("shopify_line_items")
 }
+
+// SWAP Returns Platform Integration
+model SwapStore {
+  id            String @id @default(cuid())
+  swapStoreId   String @unique @map("swap_store_id")
+  apiKey        String @map("api_key")
+  storeName     String? @map("store_name")
+  lastSyncAt    DateTime? @map("last_sync_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  returns       SwapReturn[]
+
+  @@map("swap_stores")
+}
+
+model SwapReturn {
+  id               String @id @default(cuid())
+  swapReturnId     String @unique @map("swap_return_id") // return_id from API
+  orderName        String @map("order_name")
+  orderId          String @map("order_id")
+  rma              String // RMA ID
+  shopifyOrderId   String? @map("shopify_order_id") // Link to our Shopify orders table
+
+  // Return Classification
+  typeString       String @map("type_string")
+  type             String // JSON array as string: ["Exchange", "Refund"]
+  status           String // Closed, Processing, Pending, etc.
+  shippingStatus   String @map("shipping_status")
+
+  // Financial Information
+  total                              Decimal
+  handlingFee                        Decimal @map("handling_fee")
+  shopNowRevenue                     Decimal @map("shop_now_revenue")
+  shopLaterRevenue                   Decimal @map("shop_later_revenue")
+  exchangeRevenue                    Decimal @map("exchange_revenue")
+  refundRevenue                      Decimal @map("refund_revenue")
+  totalAdditionalPayment             Decimal @map("total_additional_payment")
+  totalCreditExchangeValue           Decimal @map("total_credit_exchange_value")
+  totalRefundValueCustomerCurrency   Decimal @map("total_refund_value_customer_currency")
+
+  // Customer Information
+  customerName     String? @map("customer_name")
+  customerCurrency String? @map("customer_currency")
+
+  // Tax Information
+  totalTax         Decimal? @map("total_tax")
+  totalDuty        Decimal? @map("total_duty")
+  taxCurrency      String? @map("tax_currency")
+
+  // Timestamps (from API)
+  dateCreated      DateTime @map("date_created")
+  dateUpdated      DateTime @map("date_updated")
+
+  // Our internal timestamps
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  storeId          String @map("store_id")
+  store            SwapStore @relation(fields: [storeId], references: [id])
+  products         SwapProduct[]
+  returnReasons    SwapReturnReason[]
+
+  // Performance indexes
+  @@index([dateCreated])
+  @@index([status])
+  @@index([typeString])
+  @@index([shopifyOrderId])
+  @@index([storeId, dateCreated])
+  @@index([status, dateCreated])
+
+  @@map("swap_returns")
+}
+
+model SwapProduct {
+  id                String @id @default(cuid())
+  productId         String @map("product_id")
+  shopifyProductId  String @map("shopify_product_id")
+  productName       String @map("product_name")
+  sku               String
+  itemCount         Int @map("item_count")
+  cost              Decimal
+  returnType        String @map("return_type")
+
+  // Relationships
+  returnId          String @map("return_id")
+  return            SwapReturn @relation(fields: [returnId], references: [id])
+
+  @@map("swap_products")
+}
+
+model SwapReturnReason {
+  id        String @id @default(cuid())
+  reason    String
+  itemCount Int @map("item_count")
+
+  // Relationships
+  returnId  String @map("return_id")
+  return    SwapReturn @relation(fields: [returnId], references: [id])
+
+  @@map("swap_return_reasons")
+}

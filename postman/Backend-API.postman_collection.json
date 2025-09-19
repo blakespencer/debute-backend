@@ -140,6 +140,7 @@
     },
     {
       "name": "Shopify",
+      "description": "Shopify API - Backend handles all Shopify credentials internally",
       "item": [
         {
           "name": "Test Shopify Connection",
@@ -188,7 +189,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"since\": \"2024-01-01T00:00:00Z\",\n  \"limit\": 100\n}"
+              "raw": "{\n  \"fromDate\": \"2024-01-01T00:00:00Z\",\n  \"limit\": 100\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/shopify/sync",
@@ -232,12 +233,271 @@
               "path": ["shopify", "orders"],
               "query": [
                 {
+                  "key": "store",
+                  "value": "{{shopifyStoreDomain}}"
+                },
+                {
                   "key": "limit",
                   "value": "20"
                 },
                 {
                   "key": "offset",
                   "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "SWAP Returns",
+      "description": "SWAP Returns API - Backend handles all SWAP credentials internally",
+      "item": [
+        {
+          "name": "Test SWAP Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "test"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Returns",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/swap/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "sync"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Returns Since Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{swapApiKey}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromDate\": \"2024-01-01T00:00:00Z\",\n  \"limit\": 20\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/swap/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "sync"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Returns",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/returns?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "returns"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Returns by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/returns?status=Closed&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "returns"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Closed"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Return by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/returns/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "returns", ":id"],
+              "query": [
+                {
+                  "key": "store",
+                  "value": "{{swapStoreId}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-with-actual-return-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Total Refunds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics/total-refunds",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics", "total-refunds"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Total Refunds (Date Range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics/total-refunds?fromDate=2024-01-01&toDate=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics", "total-refunds"],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Returns by Product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics/returns-by-product",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics", "returns-by-product"],
+              "query": [
+                {
+                  "key": "store",
+                  "value": "{{swapStoreId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Return Reasons",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics/return-reasons",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics", "return-reasons"],
+              "query": [
+                {
+                  "key": "store",
+                  "value": "{{swapStoreId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Return Rates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics/return-rates",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics", "return-rates"],
+              "query": [
+                {
+                  "key": "store",
+                  "value": "{{swapStoreId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Return Rates (Date Range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics/return-rates?fromDate=2024-01-01&toDate=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics", "return-rates"],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2024-12-31"
                 }
               ]
             }
