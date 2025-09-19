@@ -176,6 +176,126 @@ export class SwapController {
     }
   }
 
+  async getTotalRefunds(req: Request, res: Response): Promise<void> {
+    try {
+      const { fromDate, toDate } = req.query;
+      const options: { fromDate?: Date; toDate?: Date } = {};
+
+      if (fromDate) {
+        options.fromDate = new Date(fromDate.toString());
+      }
+      if (toDate) {
+        options.toDate = new Date(toDate.toString());
+      }
+
+      const result = await this.swapService.getTotalRefunds(options);
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      logger.errorWithUnknown("Failed to get total refunds", error, {
+        module: "swap",
+        operation: "total-refunds",
+      });
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  async getReturnsByProduct(req: Request, res: Response): Promise<void> {
+    try {
+      const { fromDate, toDate } = req.query;
+      const options: { fromDate?: Date; toDate?: Date } = {};
+
+      if (fromDate) {
+        options.fromDate = new Date(fromDate.toString());
+      }
+      if (toDate) {
+        options.toDate = new Date(toDate.toString());
+      }
+
+      const result = await this.swapService.getReturnsByProduct(options);
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      logger.errorWithUnknown("Failed to get returns by product", error, {
+        module: "swap",
+        operation: "returns-by-product",
+      });
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  async getReturnReasons(req: Request, res: Response): Promise<void> {
+    try {
+      const { fromDate, toDate } = req.query;
+      const options: { fromDate?: Date; toDate?: Date } = {};
+
+      if (fromDate) {
+        options.fromDate = new Date(fromDate.toString());
+      }
+      if (toDate) {
+        options.toDate = new Date(toDate.toString());
+      }
+
+      const result = await this.swapService.getReturnReasons(options);
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      logger.errorWithUnknown("Failed to get return reasons", error, {
+        module: "swap",
+        operation: "return-reasons",
+      });
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  async getReturnRates(req: Request, res: Response): Promise<void> {
+    try {
+      const { fromDate, toDate } = req.query;
+      const options: { fromDate?: Date; toDate?: Date } = {};
+
+      if (fromDate) {
+        options.fromDate = new Date(fromDate.toString());
+      }
+      if (toDate) {
+        options.toDate = new Date(toDate.toString());
+      }
+
+      const result = await this.swapService.getReturnRates(options);
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      logger.errorWithUnknown("Failed to get return rates", error, {
+        module: "swap",
+        operation: "return-rates",
+      });
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
   async getReturnAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const { fromDate, toDate } = req.query;
