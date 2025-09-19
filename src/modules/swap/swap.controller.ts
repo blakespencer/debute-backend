@@ -57,10 +57,9 @@ export class SwapController {
         data: result,
       });
     } catch (error) {
-      logger.error("SWAP test connection failed", {
+      logger.errorWithUnknown("SWAP test connection failed", error, {
         module: "swap",
         operation: "test-connection",
-        error: error instanceof Error ? error : new Error(String(error))
       });
 
       // Handle Prisma database errors with human-readable messages

@@ -37,7 +37,7 @@ router.get("/analytics/total-refunds", async (req, res) => {
       data: result,
     });
   } catch (error) {
-    logger.error('Failed to get total refunds', { module: 'swap', operation: 'total-refunds', error: error instanceof Error ? error : new Error(String(error)) });
+    logger.errorWithUnknown('Failed to get total refunds', error, { module: 'swap', operation: 'total-refunds' });
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Internal server error',
@@ -63,7 +63,7 @@ router.get("/analytics/returns-by-product", async (req, res) => {
       data: result,
     });
   } catch (error) {
-    logger.error('Failed to get returns by product', { module: 'swap', operation: 'returns-by-product', error: error instanceof Error ? error : new Error(String(error)) });
+    logger.errorWithUnknown('Failed to get returns by product', error, { module: 'swap', operation: 'returns-by-product' });
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Internal server error',
@@ -89,7 +89,7 @@ router.get("/analytics/return-reasons", async (req, res) => {
       data: result,
     });
   } catch (error) {
-    logger.error('Failed to get return reasons', { module: 'swap', operation: 'return-reasons', error: error instanceof Error ? error : new Error(String(error)) });
+    logger.errorWithUnknown('Failed to get return reasons', error, { module: 'swap', operation: 'return-reasons' });
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Internal server error',
@@ -115,7 +115,7 @@ router.get("/analytics/return-rates", async (req, res) => {
       data: result,
     });
   } catch (error) {
-    logger.error('Failed to get return rates', { module: 'swap', operation: 'return-rates', error: error instanceof Error ? error : new Error(String(error)) });
+    logger.errorWithUnknown('Failed to get return rates', error, { module: 'swap', operation: 'return-rates' });
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Internal server error',
