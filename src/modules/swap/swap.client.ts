@@ -31,15 +31,6 @@ export class SwapClient {
   }
 
   /**
-   * Create AbortController with timeout (DEPRECATED - now done inline in fetchWithRetry)
-   */
-  private createTimeoutController(): AbortController {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), this.config.timeoutMs);
-    return controller;
-  }
-
-  /**
    * Calculate exponential backoff delay
    */
   private calculateBackoffDelay(
@@ -193,7 +184,6 @@ export class SwapClient {
       throw error;
     }
   }
-
 
   /**
    * Enhanced fetch with retry logic and proper error handling
