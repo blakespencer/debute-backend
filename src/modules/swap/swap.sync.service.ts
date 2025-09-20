@@ -52,14 +52,6 @@ export class SwapSyncService {
           fromDate || lastUpdatedDate || store.lastSyncAt || debugRouteFromDate;
         const syncToDate = toDate || new Date();
 
-        this.logger.debug("Sync date range calculated", {
-          fromDate,
-          toDate,
-          lastUpdatedDate,
-          storeLastSync: store.lastSyncAt,
-          finalFromDate: syncFromDate,
-          finalToDate: syncToDate,
-        });
 
         const result: SwapSyncResult = {
           returnsProcessed: 0,
@@ -73,13 +65,6 @@ export class SwapSyncService {
           let currentPage = 1;
 
           while (hasNextPage) {
-            this.logger.debug("Fetching returns from SWAP API", {
-              storeId: store.swapStoreId,
-              fromDate: syncFromDate.toISOString(),
-              toDate: syncToDate.toISOString(),
-              page: currentPage,
-              itemsPerPage: limit ? Math.min(limit, 50) : 50,
-            });
 
             const response = await client.fetchReturns({
               store: store.swapStoreId,
@@ -90,12 +75,6 @@ export class SwapSyncService {
               version: 1,
             });
 
-            this.logger.debug("API response received", {
-              returnsCount: response.orders.length,
-              hasNextPage: response.pagination.has_next_page,
-              totalItems: response.pagination.total_items,
-              currentPage: response.pagination.current_page_size,
-            });
 
             for (const returnData of response.orders) {
               try {
@@ -120,12 +99,6 @@ export class SwapSyncService {
             hasNextPage = response.pagination.has_next_page;
             currentPage++;
 
-            this.logger.debug("Page completed", {
-              returnsProcessedThisPage: response.orders.length,
-              totalReturnsProcessed: result.returnsProcessed,
-              limit: limit,
-              hasNextPage: hasNextPage,
-            });
 
             if (limit && result.returnsProcessed >= limit) {
               this.logger.info("Limit reached, stopping sync", {
@@ -137,9 +110,6 @@ export class SwapSyncService {
 
             // Rate limiting: Wait 1 second between API calls to avoid throttling
             if (hasNextPage) {
-              this.logger.debug("Waiting to avoid rate limiting", {
-                delayMs: 1000,
-              });
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }
@@ -337,7 +307,6 @@ export class SwapSyncService {
     return this.logger.time(
       "testStoreConnection",
       async () => {
-        this.logger.debug("Testing store connection", { storeId });
 
         const store = await this.repository.findStoreById(storeId);
         if (!store) {

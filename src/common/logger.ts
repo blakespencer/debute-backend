@@ -27,18 +27,51 @@ class Logger {
     this.isTest = process.env.NODE_ENV === 'test';
   }
 
+  private serializeError(error: Error): Record<string, unknown> {
+    const result: Record<string, unknown> = {
+      name: error.name,
+      message: error.message,
+    };
+
+    // Add any custom properties (like responseStatus, responseBody)
+    for (const [key, value] of Object.entries(error)) {
+      if (key !== 'name' && key !== 'message' && key !== 'stack') {
+        result[key] = value;
+      }
+    }
+
+    return result;
+  }
+
+  private transformContext(context?: LogContext): Record<string, unknown> | undefined {
+    if (!context) return undefined;
+
+    const transformed: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(context)) {
+      if (value instanceof Error) {
+        transformed[key] = this.serializeError(value);
+      } else {
+        transformed[key] = value;
+      }
+    }
+
+    return transformed;
+  }
+
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
+    const transformedContext = this.transformContext(context);
     const logEntry = {
       timestamp,
       level,
       message,
-      ...context,
+      ...transformedContext,
     };
 
     if (this.isDevelopment) {
       // Pretty formatting for development
-      const contextStr = context ? ` ${JSON.stringify(context, null, 2)}` : '';
+      const contextStr = transformedContext ? ` ${JSON.stringify(transformedContext, null, 2)}` : '';
       return `[${timestamp}] ${level.toUpperCase()}: ${message}${contextStr}`;
     }
 
@@ -123,10 +156,7 @@ class Logger {
     const startTime = Date.now();
 
     try {
-      this.debug(`Starting ${operation}`, context);
       const result = await fn();
-      const duration = Date.now() - startTime;
-      this.info(`Completed ${operation}`, { ...context, duration, operation });
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;

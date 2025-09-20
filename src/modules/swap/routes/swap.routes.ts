@@ -2,7 +2,6 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { SwapController } from "../swap.controller";
 import { SwapService } from "../swap.service";
-import { logger } from "../../../common/logger";
 
 export function createSwapRouter(prisma: PrismaClient): Router {
   const swapService = new SwapService(prisma);
