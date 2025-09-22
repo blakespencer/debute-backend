@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { createAnalyticsRouter } from "./modules/analytics";
 import { createShopifyRouter } from "./modules/shopify";
 import { createSwapRouter } from "./modules/swap";
+import { createMatchingRouter } from "./modules/matching";
 import { AppError } from "./common/errors";
 import { prisma } from "./common/database";
 import { logger } from "./common/logger";
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use("/analytics", createAnalyticsRouter(prisma));
 app.use("/shopify", createShopifyRouter(prisma));
 app.use("/swap", createSwapRouter(prisma));
+app.use("/matching", createMatchingRouter(prisma));
 
 // Health check
 app.get("/health", (req, res) => {

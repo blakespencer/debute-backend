@@ -2,17 +2,19 @@
 
 This file tracks project-level development tasks and future enhancements.
 
-## Current Sprint
+## MVP Core: Shopify + SWAP + Business Intelligence 🎯
+
+**Mission**: Build a comprehensive DTC analytics platform focused on Shopify sales data, SWAP returns integration, and advanced business intelligence for data-driven decision making.
 
 ### Shopify Integration 🚧
-**Goal**: Create a read-only Shopify integration that syncs order data from a single Shopify store into our PostgreSQL database for analytics and reporting.
+**Goal**: Complete read-only Shopify integration that syncs all order data for comprehensive analytics.
 
 **What we're trying to achieve**:
-- Automatically import order data from our Shopify store
-- Store detailed order information including pricing, line items, and customer data
-- Handle multi-currency transactions properly with Shopify's MoneyBag format
-- Enable analytics on sales data without constantly hitting Shopify's API
-- Provide a foundation for revenue analytics and business intelligence
+- Comprehensive order data import from Shopify (orders, customers, products, variants)
+- Store detailed pricing, line items, customer data, and product information
+- Handle multi-currency transactions with Shopify's MoneyBag format
+- Foundation for all business intelligence and analytics
+- Support for advanced analytics: cohorts, LTV, product performance, customer segmentation
 
 **Implementation Plan**:
 1. ✅ **Database Schema**: Design Prisma models for ShopifyStore, ShopifyOrder, and ShopifyLineItem with proper flattened MoneyBag fields
@@ -75,88 +77,96 @@ This file tracks project-level development tasks and future enhancements.
 - [ ] **Performance Baseline**: Add basic response time logging to analytics endpoints
 - [ ] **Integration Test Expansion**: Add edge cases, error scenarios, and performance testing
 
-### 2. SWAP Returns Module Implementation 🔄🔥 **NEXT PRIORITY**
-**Goal**: Build complete SWAP integration to understand returns data before advanced analytics
+### 2. SWAP Returns Integration 🔄🔥 **MVP CORE**
+**Goal**: Complete SWAP integration to enable true net sales calculations and return analytics
 
-#### **Phase 1: SWAP Foundation & Data Discovery** 🔥 (Next 1-2 weeks)
-- [ ] **SWAP API Research**: Investigate SWAP API endpoints, authentication, data structure
-- [ ] **SWAP API Client**: Build SWAP API client similar to ShopifyClient (with retries, error handling)
-- [ ] **Returns Database Schema**: Design Prisma models for returns, exchanges, reasons
-- [ ] **SWAP Data Sync Service**: Build sync service to pull returns data
-- [ ] **Returns Repository**: CRUD operations for returns data
-- [ ] **Returns Controller & Routes**: REST endpoints for returns data access
-- [ ] **Integration Testing**: Test SWAP sync with real data
+#### **Phase 1: SWAP Foundation** ✅ **COMPLETED**
+- [x] **SWAP API Research**: API endpoints, authentication, data structure
+- [x] **SWAP API Client**: Build robust client with retries and error handling
+- [x] **Returns Database Schema**: Models for returns, exchanges, reasons, refunds
+- [x] **SWAP Sync Service**: Pull returns data and link to Shopify orders
+- [x] **Returns Repository**: CRUD operations for returns data
+- [x] **Returns Controller**: REST endpoints for returns access
+- [x] **Integration Foundation**: Complete implementation (needs live API key for testing)
 
-#### **Phase 2: SWAP Data Analysis & Understanding** 📊 (Next 2-3 weeks)
-- [ ] **Data Structure Analysis**: Understand what SWAP returns vs our expectations
-- [ ] **Returns-to-Orders Matching**: Link SWAP returns to Shopify orders
-- [ ] **Returns Categorization**: Understand return reasons, types, statuses
-- [ ] **Returns Timeline Analysis**: Understand return processing workflow
-- [ ] **Data Quality Assessment**: Identify data gaps, inconsistencies, edge cases
-- [ ] **Returns Business Logic**: Understand exchanges vs refunds vs store credit
+#### **Phase 2: Returns Business Logic** 📊 (Next 2-3 weeks)
+- [ ] **Order-Return Matching**: Link SWAP returns to Shopify orders
+- [ ] **Return Type Classification**: Refunds vs exchanges vs store credit
+- [ ] **Return Reason Analysis**: Categorize and track return reasons
+- [ ] **Financial Impact Calculation**: Net sales = gross sales - returns
+- [ ] **Return Timeline Tracking**: Purchase to return timeframes
+- [ ] **Data Quality Validation**: Ensure accurate order-return linking
 
-#### **Phase 3: SWAP Integration Completion** ⚡ (Next 3-4 weeks)
-- [ ] **Production-Grade Error Handling**: Apply same error handling patterns as Shopify
-- [ ] **SWAP Unit Testing**: Comprehensive unit tests for SWAP module
-- [ ] **Real SWAP Data Testing**: Test with actual SWAP store data
-- [ ] **SWAP Integration Tests**: End-to-end testing with database
-- [ ] **SWAP Documentation**: Update README, API docs with SWAP endpoints
-- [ ] **SWAP Module Completion**: Ready for analytics integration
+#### **Phase 3: Returns Analytics Foundation** ⚡ (Next 2-3 weeks)
+- [ ] **Return Rate Calculations**: By product, time period, customer
+- [ ] **Net Revenue Metrics**: True revenue after returns
+- [ ] **Return Value Analytics**: Financial impact analysis
+- [ ] **Product Return Patterns**: High-return product identification
+- [ ] **Customer Return Behavior**: Return frequency patterns
+- [ ] **Return Reason Intelligence**: Quality vs fit vs preference analysis
 
-### 3. Advanced Analytics Platform (Post-SWAP Integration) 🔥📊
-**Goal**: Build comprehensive business intelligence using Shopify + SWAP data
+### 3. Business Intelligence Platform 🧠📊 **MVP CORE**
+**Goal**: Comprehensive analytics and insights using Shopify + SWAP data
 
-**Prerequisites**: ✅ Shopify Integration + ✅ SWAP Integration + ✅ Understanding of combined data
+**Prerequisites**: ✅ Shopify Integration + ✅ SWAP Integration
 
-#### **Phase 1: True Financial Analytics** 🔥 (After SWAP Integration)
+#### **Phase 1: Core Financial Intelligence** 🔥 (Parallel with SWAP)
 - [x] Basic KPI calculations: Total Revenue, Order Count, Average Order Value (AOV)
 - [x] Enhanced analytics endpoints with date filtering
-- [x] Analytics integration with existing Shopify order data (with fallback to basic orders)
-- [ ] **Net Sales Calculation**: True net sales = Shopify revenue - SWAP returns/refunds
-- [ ] **Return-Adjusted Metrics**: Revenue, AOV, and margins adjusted for returns
-- [ ] **Discount Analysis**: Track discount codes, automatic discounts, percentage breakdown
-- [ ] **Tax Breakdown**: Analyze tax amounts by region, tax-inclusive vs exclusive
-- [ ] **Comprehensive Return Analytics**: Return rates, reasons, patterns using SWAP data
-- [ ] **Financial Health Metrics**: True gross margin %, contribution margin accounting for returns
+- [ ] **Net Sales Engine**: Gross sales - discounts - refunds calculation
+- [ ] **True Financial Metrics**: Revenue, AOV, margins adjusted for returns
+- [ ] **Gross Margin Calculation**: (Net Sales - COGS) / Net Sales
+- [ ] **Contribution Margin**: Net Sales - COGS - Marketing Spend
+- [ ] **Return Rate Analytics**: Units and value return rates
+- [ ] **Discount Impact Analysis**: Discount codes, automatic discounts breakdown
+- [ ] **Tax Analytics**: Tax amounts by region, inclusive vs exclusive
+- [ ] **Period Comparisons**: WoW, MoM, YoY growth calculations
 
-#### **Phase 2: Product Intelligence (Shopify + SWAP)** 📈 (Next 2-4 weeks)
-- [ ] **True Product Performance**: Best sellers by net revenue (after returns), units, profit margin
-- [ ] **SKU Performance with Returns**: Individual product performance adjusted for return rates
-- [ ] **Size/Variant Analytics**: Performance and return patterns by size, color, style
-- [ ] **Return-Prone Product Identification**: Products with highest return rates from SWAP data
-- [ ] **Quality Issues Detection**: Use SWAP return reasons to identify product quality problems
-- [ ] **Category/Collection Analysis**: Performance by product categories including return rates
-- [ ] **Inventory Sell-Through**: Track inventory turnover including returned inventory
-- [ ] **Product Lifecycle Metrics**: New product performance including return patterns
-- [ ] **Cross-sell/Upsell Opportunities**: Frequently bought together analysis (excluding high-return items)
-- [ ] **Return-Informed Pricing**: Price elasticity analysis considering return costs
+#### **Phase 2: Product Intelligence** 📈 (Next 3-4 weeks)
+- [ ] **Product Performance Rankings**: Best sellers by net revenue, units, gross margin
+- [ ] **SKU Analytics**: Individual product performance with return adjustment
+- [ ] **Size/Variant Performance**: Analytics by size, color, style variations
+- [ ] **Return-Prone Product Detection**: Identify high-return products
+- [ ] **Quality Issue Identification**: Return reason analysis for quality problems
+- [ ] **Collection/Category Analysis**: Performance by product categories
+- [ ] **Sell-Through Rates**: Inventory turnover including returns
+- [ ] **Product Lifecycle Tracking**: New vs core product performance
+- [ ] **Inventory Intelligence**: Stock levels, weeks of cover, reorder points
+- [ ] **Cross-Sell Analysis**: Frequently bought together patterns
+- [ ] **Pricing Intelligence**: Price elasticity considering return costs
 
-#### **Phase 3: Customer Intelligence (Shopify + SWAP)** 👥 (Next 1-2 months)
-- [ ] **True Customer LTV**: Calculate LTV accounting for returns and refunds
-- [ ] **Customer Return Behavior**: Identify high-return vs low-return customers
-- [ ] **Repeat Purchase Rate**: Track retention adjusted for return behavior
-- [ ] **New vs Returning Customers**: Acquisition vs retention revenue (net of returns)
-- [ ] **RFM Analysis**: Recency, Frequency, Monetary segmentation considering returns
-- [ ] **Customer Acquisition Cost (CAC)**: True CAC including return costs
-- [ ] **Cohort Analysis**: Track customer behavior over time including return patterns
-- [ ] **Return-Based Churn Prediction**: Identify customers likely to return/refund
-- [ ] **Customer Segmentation**: High-value, frequent, return-prone, quality-focused segments
+#### **Phase 3: Customer Intelligence** 👥 (Next 4-5 weeks)
+- [ ] **Customer Lifetime Value**: LTV calculations including return impact
+- [ ] **Customer Segmentation**: High-value, frequent, return-prone, new vs returning
+- [ ] **Repeat Purchase Analytics**: Retention rates adjusted for returns
+- [ ] **Customer Acquisition vs Retention**: New vs returning customer revenue
+- [ ] **RFM Analysis**: Recency, Frequency, Monetary segmentation with returns
+- [ ] **Cohort Analysis**: Customer behavior tracking over time
+- [ ] **Customer Return Patterns**: High-return vs low-return customer identification
+- [ ] **Geographic Customer Analysis**: Performance by region/country
+- [ ] **Customer Journey Analytics**: Purchase patterns and lifecycle stages
+- [ ] **Churn Risk Identification**: Customers likely to stop purchasing
 
-#### **Phase 4: Time-Series & Trend Analysis** 📊 (Next 2-3 months)
-- [ ] **Month-over-Month Growth**: Revenue, orders, customer growth trends
-- [ ] **Seasonal Pattern Analysis**: Identify seasonal trends and patterns
-- [ ] **Daily/Weekly Trends**: Identify optimal sales periods
-- [ ] **Growth Rate Calculations**: YoY, MoM, WoW growth metrics
-- [ ] **Forecasting Engine**: Predict future sales, inventory needs
-- [ ] **Anomaly Detection**: Identify unusual patterns in sales data
-- [ ] **Comparative Reporting**: vs previous period, vs targets, vs benchmarks
+#### **Phase 4: Advanced Analytics & Reporting** 📊 (Next 5-6 weeks)
+- [ ] **Time-Series Analysis**: WoW, MoM, YoY growth calculations
+- [ ] **Seasonal Pattern Detection**: Identify seasonal trends and cycles
+- [ ] **Trend Analysis**: Daily/weekly optimal sales periods
+- [ ] **Anomaly Detection**: Unusual pattern identification
+- [ ] **Forecasting Engine**: Sales and inventory demand prediction
+- [ ] **Comparative Analytics**: vs previous periods, targets, benchmarks
+- [ ] **Funnel Analysis**: View → Add to Cart → Checkout → Purchase
+- [ ] **Attribution Analysis**: Revenue attribution across channels
+- [ ] **Performance Benchmarking**: Industry standard comparisons
 
-#### **Phase 5: Geographic & Channel Analytics** 🌍 (Next 3-4 months)
-- [ ] **Sales by Region**: Geographic performance analysis
-- [ ] **Shipping Analysis**: Shipping costs, delivery performance by region
-- [ ] **Traffic Source Attribution**: Connect sales to marketing channels
-- [ ] **Marketing Channel ROI**: Performance by acquisition channel
-- [ ] **International Performance**: Multi-currency, cross-border analysis
+#### **Phase 5: Automated Reporting System** 📧 (Next 6-7 weeks)
+- [ ] **Weekly Snapshot Generator**: Tactical 1-page reports
+- [ ] **Monthly Deep Dive Generator**: Strategic comprehensive reports
+- [ ] **Personal Email Integration**: SendGrid for report delivery
+- [ ] **Alert System**: Threshold-based business metric alerts
+- [ ] **Custom Report Builder**: Configurable report templates
+- [ ] **Report Scheduling**: Automated delivery system
+- [ ] **Executive Summary Generator**: C-level focused insights
+- [ ] **Performance Alert Engine**: Real-time business threshold monitoring
 
 ### 3. SWAP Returns Integration & Analytics 🔄📦
 **Goal**: Comprehensive returns management and analytics integration

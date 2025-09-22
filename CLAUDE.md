@@ -140,6 +140,27 @@ test/
 - **Mocks**: Shared mocks in `test/helpers/mocks/`
 - **Clean tests**: Each test should be independent and clean up after itself
 
+#### Unit Test Setup (STANDARDIZED APPROACH)
+**ALWAYS start unit test files with this pattern to avoid database connection issues:**
+
+```typescript
+// Standard unit test setup - prevents database connections
+import '../../../helpers/unit-test-setup';
+
+import { YourService } from '../../../../src/modules/your-module/your-service';
+import { createMockPrisma } from '../../../helpers/mocks/prisma.mock';
+
+describe('YourService', () => {
+  // Your tests here
+});
+```
+
+**Key Points:**
+- `unit-test-setup.ts` automatically mocks logger and database
+- Use `createMockPrisma()` for Prisma-dependent services
+- See `test/helpers/unit-test.template.ts` for complete template
+- This prevents database connection errors during unit testing
+
 ## Adding New Features
 
 1. Create module structure: `src/modules/[feature-name]/`

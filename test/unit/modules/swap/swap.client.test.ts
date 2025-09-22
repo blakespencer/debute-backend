@@ -1,4 +1,6 @@
-// Import directly to avoid database setup
+// Standard unit test setup - prevents database connections
+import '../../../helpers/unit-test-setup';
+
 import { SwapClient } from '../../../../src/modules/swap/swap.client';
 import {
   SwapAuthError,
@@ -7,23 +9,6 @@ import {
   SwapTimeoutError,
   SwapMaxRetriesError
 } from '../../../../src/modules/swap/swap.errors';
-
-// Mock console to avoid logger database connections
-jest.mock('../../../../src/common/logger', () => ({
-  createLogger: () => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    time: jest.fn().mockImplementation(async (operation, fn) => {
-      try {
-        return await fn();
-      } catch (error) {
-        throw error;
-      }
-    })
-  })
-}));
 
 // Mock global fetch
 const mockFetch = jest.fn();
