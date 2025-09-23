@@ -3,103 +3,63 @@ import '../../../helpers/unit-test-setup';
 
 import { PrismaClient } from '@prisma/client';
 import { MatchingService } from '../../../../src/modules/matching/matching.service';
+import { MatchingRepository } from '../../../../src/modules/matching/matching.repository';
 import { createMockPrisma } from '../../../helpers/mocks/prisma.mock';
+
+// Mock the repository
+jest.mock('../../../../src/modules/matching/matching.repository');
 
 describe('MatchingService', () => {
   let matchingService: MatchingService;
   let mockPrisma: jest.Mocked<PrismaClient>;
+  let mockRepository: jest.Mocked<MatchingRepository>;
 
   beforeEach(() => {
     mockPrisma = createMockPrisma();
     matchingService = new MatchingService(mockPrisma);
+
+    // Get the mocked repository instance
+    mockRepository = (matchingService as any).repository as jest.Mocked<MatchingRepository>;
   });
 
   describe('getMatchingStats', () => {
     it('should return correct statistics when no store filter is provided', async () => {
       // Arrange
-      (mockPrisma.swapReturn.count as jest.Mock)
-        .mockResolvedValueOnce(10) // totalSwapReturns
-        .mockResolvedValueOnce(7)  // returnsWithShopifyId
-        .mockResolvedValueOnce(5)  // matchedReturns (isMatched: true)
-        .mockResolvedValueOnce(2); // unmatchedReturnsWithShopifyId
+      const expectedStats = {
+        totalSwapReturns: 10,
+        returnsWithShopifyId: 7,
+        matchableReturns: 5,
+        unmatchableReturns: 2,
+      };
+
+      mockRepository.getMatchingStats = jest.fn().mockResolvedValue(expectedStats);
 
       // Act
       const result = await matchingService.getMatchingStats();
 
       // Assert
-      expect(result).toEqual({
-        totalSwapReturns: 10,
-        returnsWithShopifyId: 7,
-        matchableReturns: 5,
-        unmatchableReturns: 2,
-      });
-
-      // Verify the correct queries were made
-      expect(mockPrisma.swapReturn.count).toHaveBeenCalledTimes(4);
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(1, { where: {} });
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(2, {
-        where: {
-          shopifyOrderId: { not: null },
-        },
-      });
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(3, {
-        where: {
-          isMatched: true,
-        },
-      });
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(4, {
-        where: {
-          shopifyOrderId: { not: null },
-          isMatched: false,
-        },
-      });
+      expect(result).toEqual(expectedStats);
+      expect(mockRepository.getMatchingStats).toHaveBeenCalledWith(undefined);
     });
 
     it('should return correct statistics when store filter is provided', async () => {
       // Arrange
       const storeId = 'test-store-123';
+      const expectedStats = {
+        totalSwapReturns: 5,
+        returnsWithShopifyId: 3,
+        matchableReturns: 2,
+        unmatchableReturns: 1,
+      };
 
-      (mockPrisma.swapReturn.count as jest.Mock)
-        .mockResolvedValueOnce(5)  // totalSwapReturns for this store
-        .mockResolvedValueOnce(3)  // returnsWithShopifyId for this store
-        .mockResolvedValueOnce(2)  // matchedReturns for this store
-        .mockResolvedValueOnce(1); // unmatchedReturnsWithShopifyId for this store
+      mockRepository.getMatchingStats = jest.fn().mockResolvedValue(expectedStats);
 
       // Act
       const result = await matchingService.getMatchingStats(storeId);
 
       // Assert
-      expect(result).toEqual({
-        totalSwapReturns: 5,
-        returnsWithShopifyId: 3,
-        matchableReturns: 2,
-        unmatchableReturns: 1,
-      });
-
-      // Verify the correct queries were made with store filter
-      expect(mockPrisma.swapReturn.count).toHaveBeenCalledTimes(4);
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(1, {
-        where: { storeId }
-      });
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(2, {
-        where: {
-          storeId,
-          shopifyOrderId: { not: null },
-        },
-      });
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(3, {
-        where: {
-          storeId,
-          isMatched: true,
-        },
-      });
-      expect(mockPrisma.swapReturn.count).toHaveBeenNthCalledWith(4, {
-        where: {
-          storeId,
-          shopifyOrderId: { not: null },
-          isMatched: false,
-        },
-      });
+      expect(result).toEqual(expectedStats);
+      expect(mockRepository.getMatchingStats).toHaveBeenCalledWith(storeId);
     });
   });
 
@@ -134,16 +94,12 @@ describe('MatchingService', () => {
         },
       ];
 
-      // Mock the findMany call for unmatched returns
-      (mockPrisma.swapReturn.findMany as jest.Mock).mockResolvedValue(mockUnmatchedReturns);
-
-      // Mock the findUnique calls for Shopify orders
-      (mockPrisma.shopifyOrder.findUnique as jest.Mock)
+      // Mock repository methods
+      mockRepository.findUnmatchedReturns = jest.fn().mockResolvedValue(mockUnmatchedReturns);
+      mockRepository.findShopifyOrderById = jest.fn()
         .mockResolvedValueOnce(mockShopifyOrders[0])
         .mockResolvedValueOnce(mockShopifyOrders[1]);
-
-      // Mock the update calls
-      (mockPrisma.swapReturn.update as jest.Mock).mockResolvedValue({});
+      mockRepository.markReturnAsMatched = jest.fn().mockResolvedValue(undefined);
 
       // Act
       const result = await matchingService.matchSwapToShopify({ dryRun: false });
@@ -157,16 +113,12 @@ describe('MatchingService', () => {
         errors: [],
       });
 
-      // Verify the returns were actually updated
-      expect(mockPrisma.swapReturn.update).toHaveBeenCalledTimes(2);
-      expect(mockPrisma.swapReturn.update).toHaveBeenNthCalledWith(1, {
-        where: { id: 'return-1' },
-        data: { isMatched: true },
-      });
-      expect(mockPrisma.swapReturn.update).toHaveBeenNthCalledWith(2, {
-        where: { id: 'return-2' },
-        data: { isMatched: true },
-      });
+      // Verify repository methods were called correctly
+      expect(mockRepository.findUnmatchedReturns).toHaveBeenCalledWith(100, undefined);
+      expect(mockRepository.findShopifyOrderById).toHaveBeenCalledTimes(2);
+      expect(mockRepository.markReturnAsMatched).toHaveBeenCalledTimes(2);
+      expect(mockRepository.markReturnAsMatched).toHaveBeenNthCalledWith(1, 'return-1');
+      expect(mockRepository.markReturnAsMatched).toHaveBeenNthCalledWith(2, 'return-2');
     });
   });
 });

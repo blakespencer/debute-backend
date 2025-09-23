@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { createLogger } from "../../common/logger";
+import { MatchingRepository } from "./matching.repository";
 import {
   SwapShopifyMatchResult,
   MatchingOptions,
@@ -8,9 +9,12 @@ import {
 } from "./matching.types";
 
 export class MatchingService {
+  private repository: MatchingRepository;
   private logger = createLogger("MatchingService");
 
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) {
+    this.repository = new MatchingRepository(prisma);
+  }
 
   /**
    * Match SWAP returns to Shopify orders based on shopifyOrderId
@@ -29,7 +33,7 @@ export class MatchingService {
 
       try {
         // Find SWAP returns that need matching
-        const returnsToMatch = await this.findReturnsNeedingMatching(batchSize, storeId);
+        const returnsToMatch = await this.repository.findUnmatchedReturns(batchSize, storeId);
         result.totalReturnsProcessed = returnsToMatch.length;
 
         this.logger.info(`Found ${returnsToMatch.length} returns to process for matching`);
@@ -73,123 +77,30 @@ export class MatchingService {
   }
 
   /**
-   * Get detailed statistics about current matching state - ENTERPRISE VERSION
-   * Uses isMatched field for better performance
+   * Get detailed statistics about current matching state
    */
   async getMatchingStats(storeId?: string): Promise<MatchingStats> {
-    const whereClause = storeId ? { storeId } : {};
-
-    const [
-      totalSwapReturns,
-      returnsWithShopifyId,
-      matchedReturns,
-      unmatchedReturnsWithShopifyId,
-    ] = await Promise.all([
-      this.prisma.swapReturn.count({ where: whereClause }),
-      this.prisma.swapReturn.count({
-        where: {
-          ...whereClause,
-          shopifyOrderId: { not: null },
-        },
-      }),
-      this.prisma.swapReturn.count({
-        where: {
-          ...whereClause,
-          isMatched: true,
-        },
-      }),
-      this.prisma.swapReturn.count({
-        where: {
-          ...whereClause,
-          shopifyOrderId: { not: null },
-          isMatched: false,
-        },
-      }),
-    ]);
-
-    return {
-      totalSwapReturns,
-      returnsWithShopifyId,
-      matchableReturns: matchedReturns,
-      unmatchableReturns: unmatchedReturnsWithShopifyId,
-    };
+    return this.repository.getMatchingStats(storeId);
   }
 
   /**
    * Get list of returns that can't be matched (have shopifyOrderId but no corresponding Shopify order)
    */
   async getUnmatchedReturns(limit = 50, storeId?: string): Promise<UnmatchedReturn[]> {
-    const whereClause = storeId ? { storeId } : {};
+    const unmatchedReturns = await this.repository.getUnmatchedReturns(limit, storeId);
 
-    // Get returns with shopifyOrderId
-    const returnsWithShopifyId = await this.prisma.swapReturn.findMany({
-      where: {
-        ...whereClause,
-        shopifyOrderId: { not: null },
-      },
-      select: {
-        id: true,
-        shopifyOrderId: true,
-        orderName: true,
-        rma: true,
-      },
-      take: limit,
-    });
-
-    const shopifyOrderIds = returnsWithShopifyId
-      .map(r => r.shopifyOrderId)
-      .filter(Boolean) as string[];
-
-    // Find which Shopify orders exist
-    const existingShopifyOrders = await this.prisma.shopifyOrder.findMany({
-      where: {
-        shopifyOrderId: { in: shopifyOrderIds },
-      },
-      select: {
-        shopifyOrderId: true,
-      },
-    });
-
-    const existingShopifyOrderIds = new Set(existingShopifyOrders.map(o => o.shopifyOrderId));
-
-    // Return only the unmatched ones
-    return returnsWithShopifyId
-      .filter(r => r.shopifyOrderId && !existingShopifyOrderIds.has(r.shopifyOrderId))
-      .map(r => ({
-        swapReturnId: r.id,
-        shopifyOrderId: r.shopifyOrderId!,
-        orderName: r.orderName,
-        rma: r.rma,
-        reason: 'shopify_order_not_found' as const,
-      }));
+    return unmatchedReturns.map(r => ({
+      swapReturnId: r.id,
+      shopifyOrderId: r.shopifyOrderId!,
+      orderName: r.orderName,
+      rma: r.rma,
+      reason: 'shopify_order_not_found' as const,
+    }));
   }
 
   /**
-   * Find SWAP returns that need matching - ENTERPRISE VERSION
-   * Only gets unmatched returns with shopifyOrderId
-   */
-  private async findReturnsNeedingMatching(limit: number, storeId?: string) {
-    const whereClause = storeId ? { storeId } : {};
-
-    return this.prisma.swapReturn.findMany({
-      where: {
-        ...whereClause,
-        shopifyOrderId: { not: null },
-        isMatched: false,  // Only unmatched returns!
-      },
-      select: {
-        id: true,
-        shopifyOrderId: true,
-        orderName: true,
-        rma: true,
-      },
-      take: limit,
-    });
-  }
-
-  /**
-   * Process a single return for matching - ENTERPRISE VERSION
-   * Actually updates the isMatched flag when not in dry run mode
+   * Process a single return for matching
+   * Business logic for matching validation and updates
    */
   private async matchSingleReturn(
     swapReturn: {
@@ -205,16 +116,7 @@ export class MatchingService {
     }
 
     // Check if corresponding Shopify order exists in our database
-    const shopifyOrder = await this.prisma.shopifyOrder.findUnique({
-      where: {
-        shopifyOrderId: swapReturn.shopifyOrderId,
-      },
-      select: {
-        id: true,
-        shopifyOrderId: true,
-        name: true,
-      },
-    });
+    const shopifyOrder = await this.repository.findShopifyOrderById(swapReturn.shopifyOrderId);
 
     if (!shopifyOrder) {
       this.logger.warn(`Shopify order not found in database`, {
@@ -227,10 +129,7 @@ export class MatchingService {
 
     // Match found! Update the database if not dry run
     if (!dryRun) {
-      await this.prisma.swapReturn.update({
-        where: { id: swapReturn.id },
-        data: { isMatched: true },
-      });
+      await this.repository.markReturnAsMatched(swapReturn.id);
 
       this.logger.info(`Successfully matched return to order`, {
         swapReturnId: swapReturn.id,

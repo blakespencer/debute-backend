@@ -14,5 +14,9 @@ export function createMockPrisma(): jest.Mocked<PrismaClient> {
       findMany: jest.fn().mockImplementation(() => Promise.resolve([])),
       findUnique: jest.fn().mockImplementation(() => Promise.resolve(null)),
     },
+    swapStore: {
+      findMany: jest.fn().mockImplementation(() => Promise.resolve([])),
+      findUnique: jest.fn().mockImplementation(() => Promise.resolve(null)),
+    },
   } as any;
 }
