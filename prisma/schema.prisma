@@ -154,9 +154,8 @@ model SwapReturn {
   id               String @id @default(cuid())
   swapReturnId     String @unique @map("swap_return_id") // return_id from API
   orderName        String @map("order_name")
-  orderId          String @map("order_id")
+  shopifyOrderId   String @map("shopify_order_id") // SWAP's order_id IS the Shopify order ID
   rma              String // RMA ID
-  shopifyOrderId   String? @map("shopify_order_id") // Link to our Shopify orders table
   isMatched        Boolean @default(false) @map("is_matched") // Whether return is matched to Shopify order
 
   // Return Classification

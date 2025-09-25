@@ -16,6 +16,7 @@ import {
   ShopifyRateLimitError,
 } from "./shopify.errors";
 import { createLogger } from "../../common/logger";
+import { extractOrderId } from "./utils/shopify-gid.utils";
 
 export class ShopifySyncService {
   private repository: ShopifyRepository;
@@ -172,7 +173,7 @@ export class ShopifySyncService {
     storeId: string
   ): Promise<void> {
     const existingOrder = await this.repository.findOrderByShopifyId(
-      apiOrder.id
+      extractOrderId(apiOrder.id) // Use clean ID for lookup
     );
 
     const orderData = this.mapApiOrderToDb(apiOrder, storeId);
@@ -253,7 +254,7 @@ export class ShopifySyncService {
     const orderNumber = numberMatch ? parseInt(numberMatch[0]) : 0;
 
     return {
-      shopifyOrderId: apiOrder.id,
+      shopifyOrderId: extractOrderId(apiOrder.id), // Extract clean ID from GID format
       legacyResourceId: apiOrder.legacyResourceId,
       number: orderNumber, // Parsed from name due to GraphQL API limitation
       name: apiOrder.name,

@@ -49,9 +49,8 @@ export class SwapRepository {
   async createReturn(data: {
     swapReturnId: string;
     orderName: string;
-    orderId: string;
+    shopifyOrderId: string;
     rma: string;
-    shopifyOrderId?: string;
     storeId: string;
     typeString: string;
     type: string;
@@ -114,9 +113,8 @@ export class SwapRepository {
 
   async updateReturn(swapReturnId: string, data: {
     orderName?: string;
-    orderId?: string;
-    rma?: string;
     shopifyOrderId?: string;
+    rma?: string;
     typeString?: string;
     type?: string;
     status?: string;

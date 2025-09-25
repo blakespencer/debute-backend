@@ -105,16 +105,12 @@ export class MatchingService {
   private async matchSingleReturn(
     swapReturn: {
       id: string;
-      shopifyOrderId: string | null;
+      shopifyOrderId: string;
       orderName: string;
       rma: string;
     },
     dryRun: boolean
   ): Promise<{ matched: boolean; alreadyMatched: boolean }> {
-    if (!swapReturn.shopifyOrderId) {
-      return { matched: false, alreadyMatched: false };
-    }
-
     // Check if corresponding Shopify order exists in our database
     const shopifyOrder = await this.repository.findShopifyOrderById(swapReturn.shopifyOrderId);
 

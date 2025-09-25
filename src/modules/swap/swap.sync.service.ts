@@ -184,26 +184,13 @@ export class SwapSyncService {
       apiReturn.shipping_address
     );
 
-    // Try to link to Shopify order if order_id is provided
-    let shopifyOrderId: string | undefined;
-    if (apiReturn.order_id) {
-      const shopifyOrder = await this.prisma.shopifyOrder.findFirst({
-        where: {
-          OR: [
-            { legacyResourceId: apiReturn.order_id },
-            { name: apiReturn.order_id },
-          ],
-        },
-      });
-      shopifyOrderId = shopifyOrder?.shopifyOrderId;
-    }
+    // SWAP's order_id is directly the Shopify order ID - no lookup needed
 
     const returnData = {
       swapReturnId: apiReturn.return_id,
       orderName: apiReturn.order_name,
-      orderId: apiReturn.order_id,
+      shopifyOrderId: apiReturn.order_id, // SWAP's order_id IS the Shopify order ID
       rma: apiReturn.rma,
-      shopifyOrderId,
       storeId,
 
       // Return Classification

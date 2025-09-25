@@ -20,7 +20,6 @@ export class MatchingRepository {
       this.prisma.swapReturn.count({
         where: {
           ...whereClause,
-          shopifyOrderId: { not: null },
         },
       }),
       this.prisma.swapReturn.count({
@@ -32,7 +31,6 @@ export class MatchingRepository {
       this.prisma.swapReturn.count({
         where: {
           ...whereClause,
-          shopifyOrderId: { not: null },
           isMatched: false,
         },
       }),
@@ -55,7 +53,6 @@ export class MatchingRepository {
     return this.prisma.swapReturn.findMany({
       where: {
         ...whereClause,
-        shopifyOrderId: { not: null },
         isMatched: false,
       },
       select: {
@@ -104,7 +101,6 @@ export class MatchingRepository {
     const returnsWithShopifyId = await this.prisma.swapReturn.findMany({
       where: {
         ...whereClause,
-        shopifyOrderId: { not: null },
         isMatched: false,
       },
       select: {
