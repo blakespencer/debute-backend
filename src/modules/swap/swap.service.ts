@@ -85,7 +85,6 @@ export class SwapService {
       where: { id },
       include: {
         products: true,
-        returnReasons: true,
         store: true,
       },
     });

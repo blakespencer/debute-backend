@@ -520,6 +520,243 @@ docker compose exec db psql -U postgres -d backend_dev  # Connect to database
 - Additional integrations (Meta Ads, Google Analytics 4)
 - Performance monitoring and optimization
 
+## MCP (Model Context Protocol) Integration
+
+This project includes powerful MCP integrations for enhanced development with Claude Code:
+
+### Prerequisites
+
+- [Claude Desktop App](https://claude.ai/download) installed
+- Node.js 18+ and npm for running MCP servers
+
+### Available MCP Servers
+
+#### 1. Shopify Development MCP
+
+**Purpose**: Direct integration with Shopify APIs for development and testing.
+
+**Setup:**
+
+1. **Install and configure in Claude Desktop**:
+   ```json
+   // Add to your Claude Desktop config (~/.claude/config.json)
+   {
+     "mcpServers": {
+       "shopify-dev": {
+         "command": "npx",
+         "args": ["-y", "@shopify/dev-mcp@latest"],
+         "env": {
+           "SHOPIFY_ACCESS_TOKEN": "your_admin_api_token",
+           "SHOPIFY_SHOP_DOMAIN": "your-store.myshopify.com"
+         }
+       }
+     }
+   }
+   ```
+
+2. **Quick test in this project**:
+   ```bash
+   npm run shopify:mcp  # Runs npx -y @shopify/dev-mcp@latest
+   ```
+
+**Features:**
+- Direct GraphQL API introspection
+- Real-time schema validation
+- Query testing and development
+- Administrative operations
+
+#### 2. Prisma Local MCP
+
+**Purpose**: Database schema management and operations with proper environment detection.
+
+**Setup:**
+
+1. **Install Prisma MCP server**:
+   ```bash
+   npm install -g @prismaio/mcp-server-prisma
+   ```
+
+2. **Configure in Claude Desktop**:
+   ```json
+   // Add to your Claude Desktop config
+   {
+     "mcpServers": {
+       "prisma-local": {
+         "command": "mcp-server-prisma",
+         "args": ["--project-path", "/Users/[your-username]/projects/backend"]
+       }
+     }
+   }
+   ```
+
+**Features:**
+- Schema introspection and validation
+- Migration management
+- Database operations
+- Environment-aware connection handling
+
+### Environment-Aware Database Operations
+
+**The Problem**: Docker containers use `db:5432` while host/MCP uses `localhost:5434` for the same database.
+
+**The Solution**: We've created environment-aware scripts that automatically detect the context:
+
+```bash
+# Use this script for any Prisma operations - it auto-detects environment
+./scripts/prisma-exec.sh db pull
+./scripts/prisma-exec.sh migrate dev
+./scripts/prisma-exec.sh studio
+
+# Or use the npm shortcuts
+npm run migrate:docker    # Runs migrations in Docker context
+npm run validate:schema   # Validates schema in current context
+```
+
+**How it works:**
+- **From host/MCP**: Uses `postgresql://postgres:securepassword123@localhost:5434/backend_dev`
+- **From Docker container**: Uses `postgresql://postgres:securepassword123@db:5432/backend_dev`
+- **Same database, different connection strings** based on where you're running the command
+
+### MCP Development Workflow
+
+#### With Shopify MCP
+
+1. **Start local development**:
+   ```bash
+   docker compose up  # Start your backend
+   ```
+
+2. **Use Claude Code with Shopify MCP** for:
+   - Exploring Shopify Admin API schema
+   - Testing GraphQL queries before implementing
+   - Validating API responses
+   - Debugging webhook payloads
+
+3. **Example Claude Code workflow**:
+   ```
+   Claude: "Show me the GraphQL schema for Shopify orders"
+   → MCP introspects schema and shows available fields
+
+   Claude: "Create a query to get orders with line items"
+   → MCP validates query structure
+
+   Claude: "Test this query with my store"
+   → MCP executes query and shows results
+   ```
+
+#### With Prisma MCP
+
+1. **Schema operations**:
+   ```bash
+   # From Claude Code, ask to:
+   # - "Show me the current database schema"
+   # - "Create a migration for [changes]"
+   # - "Validate my Prisma schema"
+   ```
+
+2. **Database synchronization**:
+   ```bash
+   # If you make schema changes, run:
+   ./scripts/prisma-exec.sh generate  # Updates TypeScript types
+   npm run validate:schema            # Confirms schema is valid
+   ```
+
+### Local Server Setup for Advanced MCP
+
+For custom MCP integrations, you can run local MCP servers:
+
+#### 1. Create Custom MCP Server
+
+```javascript
+// scripts/custom-mcp-server.js
+const { MCPServer } = require('@modelcontextprotocol/server');
+
+const server = new MCPServer({
+  name: 'debute-backend-mcp',
+  version: '1.0.0',
+});
+
+server.addTool({
+  name: 'sync-swap-data',
+  description: 'Sync SWAP returns data',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      fromDate: { type: 'string', format: 'date' },
+      limit: { type: 'number' }
+    }
+  },
+  handler: async (args) => {
+    // Call your backend API
+    const response = await fetch('http://localhost:3000/api/swap/sync', {
+      method: 'POST',
+      body: JSON.stringify(args),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return await response.json();
+  }
+});
+
+server.listen({ port: 3001 });
+```
+
+#### 2. Register Custom Server
+
+```json
+// Claude Desktop config
+{
+  "mcpServers": {
+    "debute-backend": {
+      "command": "node",
+      "args": ["scripts/custom-mcp-server.js"],
+      "cwd": "/Users/[your-username]/projects/backend"
+    }
+  }
+}
+```
+
+#### 3. Use in Claude Code
+
+```
+You: "Sync SWAP data for the last 30 days"
+Claude: Uses debute-backend MCP → calls your local API → shows results
+```
+
+### MCP Best Practices
+
+1. **Keep MCPs running**: MCP servers should stay running for best performance
+2. **Environment variables**: Store sensitive data in environment variables, not config files
+3. **Local development**: Use MCP for development/testing, not production operations
+4. **Error handling**: MCPs will show detailed error messages from your APIs
+5. **Schema validation**: Always validate GraphQL queries through MCP before implementing
+
+### Troubleshooting MCP
+
+**MCP server won't start:**
+```bash
+# Check Claude Desktop logs
+# macOS: ~/Library/Logs/Claude/
+# Windows: %APPDATA%/Claude/logs/
+
+# Test MCP command manually
+npx -y @shopify/dev-mcp@latest
+```
+
+**Database connection issues:**
+```bash
+# Test both environments
+./scripts/prisma-exec.sh db pull  # Should work from host
+docker compose exec app npx prisma db pull  # Should work from container
+```
+
+**Schema out of sync:**
+```bash
+# Reset and regenerate everything
+./scripts/prisma-exec.sh generate
+npm run validate:schema
+docker compose restart app
+```
+
 ## Troubleshooting
 
 **Database connection issues:**
@@ -530,6 +767,9 @@ pg_isready
 
 # Verify your DATABASE_URL in .env
 # Make sure database exists
+
+# For MCP/Docker dual environment issues:
+./scripts/prisma-exec.sh db pull  # Auto-detects correct connection
 ```
 
 **Prisma client issues:**
@@ -537,6 +777,9 @@ pg_isready
 ```bash
 # Regenerate client
 npx prisma generate
+
+# Environment-aware regeneration
+./scripts/prisma-exec.sh generate
 
 # Clear node_modules if needed
 rm -rf node_modules package-lock.json

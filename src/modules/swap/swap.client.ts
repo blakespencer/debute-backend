@@ -172,7 +172,12 @@ export class SwapClient {
         await this.handleHttpError(response, operation, url);
       }
 
-      return await response.json();
+      const result = await response.json();
+
+      // DEBUG: Log the raw SWAP API response
+      console.log('🔍 RAW SWAP API RESPONSE:', JSON.stringify(result, null, 2));
+
+      return result;
     } catch (error) {
       clearTimeout(timeoutId);
 

@@ -145,20 +145,32 @@ export const swapFixtures = {
   // Test SWAP return reasons
   swapReturnReasons: [
     {
-      reason: 'Wrong size',
-      itemCount: 2,
+      mainReasonId: 'SIZE_001',
+      mainReasonText: 'Wrong size',
+      subReasonId: 'SIZE_TOO_SMALL',
+      subReasonText: 'Too small',
+      comments: 'Customer ordered medium but needed large',
     },
     {
-      reason: 'Defective item',
-      itemCount: 1,
+      mainReasonId: 'DEFECT_001',
+      mainReasonText: 'Defective item',
+      subReasonId: 'DEFECT_DAMAGED',
+      subReasonText: 'Damaged during shipping',
+      comments: 'Package arrived with torn fabric',
     },
     {
-      reason: 'Wrong color',
-      itemCount: 1,
+      mainReasonId: 'COLOR_001',
+      mainReasonText: 'Wrong color',
+      subReasonId: null,
+      subReasonText: null,
+      comments: null,
     },
     {
-      reason: 'Changed mind',
-      itemCount: 1,
+      mainReasonId: 'MIND_001',
+      mainReasonText: 'Changed mind',
+      subReasonId: null,
+      subReasonText: null,
+      comments: 'No longer needed',
     },
   ],
 

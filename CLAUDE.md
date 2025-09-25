@@ -58,6 +58,49 @@ npx prisma migrate reset    # Drop all data and re-run migrations
 
 This is an Express.js backend API with TypeScript and Prisma ORM connecting to PostgreSQL. The codebase follows a modular architecture with clear separation of concerns.
 
+## MCP (Model Context Protocol) Integration
+
+This project is configured for enhanced development with Claude Code through MCP integrations:
+
+### Environment-Aware Database Operations
+
+**CRITICAL**: This project has a dual-environment setup:
+- **Host/MCP environment**: `postgresql://postgres:securepassword123@localhost:5434/backend_dev`
+- **Docker environment**: `postgresql://postgres:securepassword123@db:5432/backend_dev`
+
+**Always use environment-aware commands**:
+```bash
+# ✅ CORRECT - Auto-detects environment
+./scripts/prisma-exec.sh db pull
+./scripts/prisma-exec.sh migrate dev
+./scripts/prisma-exec.sh generate
+
+# ❌ AVOID - May use wrong database URL
+npx prisma db pull
+npx prisma migrate dev
+```
+
+### Available MCP Servers
+
+#### 1. Shopify Development MCP (`@shopify/dev-mcp`)
+- **Purpose**: GraphQL API introspection and testing
+- **Access**: `npm run shopify:mcp` or direct npx command
+- **Use for**: Schema exploration, query validation, API testing
+
+#### 2. Prisma Local MCP (if configured)
+- **Purpose**: Database schema management
+- **Features**: Schema validation, migration management
+- **Use for**: Database operations, schema introspection
+
+### MCP Development Patterns
+
+When working with this codebase through Claude Code:
+
+1. **Database Operations**: Always use `./scripts/prisma-exec.sh [command]` for Prisma operations
+2. **Schema Changes**: Run `npm run validate:schema` after changes
+3. **Environment Detection**: The system auto-detects host vs Docker context
+4. **Migration Management**: Use `npm run migrate:docker` for Docker-specific migrations
+
 ### Module Structure
 Each feature module follows this pattern:
 - `*.controller.ts` - Express route handlers, request/response handling
@@ -104,7 +147,27 @@ Controller → Service → Repository → Prisma → Database
 
 ### Current Modules
 - **analytics**: Revenue analytics endpoints (totalRevenue, orderCount, averageOrderValue)
-- **shopify**: Shopify integration for syncing orders and data (in development)
+- **shopify**: Shopify integration for syncing orders and data
+- **swap**: SWAP Returns Platform integration for comprehensive return analytics
+
+#### SWAP Returns Integration
+The SWAP module captures complete return data from the SWAP Returns Platform API:
+
+**Key Features**:
+- Complete product return data including `mainReasonText`, `subReasonText`, and all product metadata
+- Flattened address fields for fast analytics queries
+- Full financial breakdown (refunds, exchanges, additional payments)
+- Rich product metadata (collections, variants, reasons, intake status)
+- Address data (billing/shipping) stored directly on returns for performance
+
+**Critical Fields**:
+- `deliveryStatus` and `returnStatus` - Core sync fields that were causing errors
+- `mainReasonText` - Essential for return reason analytics
+- Address fields - `billingCity`, `billingCountryCode`, `shippingCity`, etc.
+- Product metadata - `collections`, `productAltType`, `variantName`, etc.
+
+**Schema Design**:
+The SWAP schema captures ALL data from the API response to ensure comprehensive analytics capabilities. No SWAP API fields are excluded - the database stores the complete dataset for maximum flexibility.
 
 ## Testing Structure
 
@@ -195,3 +258,65 @@ Required environment variables in `.env`:
 - `PORT` - Server port (default: 3000)
 - `DATABASE_URL` - PostgreSQL connection string
 - `NODE_ENV` - Environment (development/production)
+
+## MCP Troubleshooting Guide
+
+### Environment Detection Issues
+
+If Prisma operations fail or use the wrong database:
+
+```bash
+# Test environment detection
+./scripts/prisma-exec.sh --help    # Should show correct DATABASE_URL
+echo $DATABASE_URL                  # Check current environment variable
+
+# Manual environment override
+DATABASE_URL=postgresql://postgres:securepassword123@localhost:5434/backend_dev npx prisma db pull
+```
+
+### Schema Sync Issues
+
+When schema and database get out of sync:
+
+```bash
+# 1. Restore schema from database
+./scripts/prisma-exec.sh db pull
+
+# 2. Regenerate client
+./scripts/prisma-exec.sh generate
+
+# 3. Validate everything works
+npm run validate:schema
+
+# 4. Restart Docker if needed
+docker compose restart app
+```
+
+### SWAP Data Sync Errors
+
+If SWAP API sync fails with missing column errors:
+
+1. **Check required fields exist**:
+   ```bash
+   docker compose exec db psql -U postgres -d backend_dev -c "\d swap_returns" | grep -E "(delivery_status|return_status)"
+   docker compose exec db psql -U postgres -d backend_dev -c "\d swap_products" | grep -E "main_reason_text"
+   ```
+
+2. **If fields are missing**, the database schema is out of sync. Run:
+   ```bash
+   ./scripts/prisma-exec.sh db push --force-reset  # ⚠️ Destructive
+   npm run prisma:seed  # Restore test data
+   ```
+
+### MCP Server Connection Issues
+
+```bash
+# Test Shopify MCP
+npm run shopify:mcp
+
+# Check Claude Desktop logs (macOS)
+tail -f ~/Library/Logs/Claude/mcp*.log
+
+# Verify environment variables in Claude Desktop config
+cat ~/.claude/config.json
+```

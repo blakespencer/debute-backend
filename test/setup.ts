@@ -20,7 +20,16 @@ const prisma = new PrismaClient({
 
 // Global test setup
 beforeAll(async () => {
-  // Reset test database before all tests
+  // Only reset database for integration tests, skip for unit tests
+  const testPath = expect.getState().testPath || '';
+  const isUnitTest = testPath.includes('/unit/');
+
+  if (isUnitTest) {
+    // Skip database setup for unit tests
+    return;
+  }
+
+  // Reset test database before integration tests
   try {
     await resetTestDatabase();
   } catch (error) {
@@ -31,7 +40,13 @@ beforeAll(async () => {
 
 // Cleanup after all tests
 afterAll(async () => {
-  await prisma.$disconnect();
+  // Only disconnect for integration tests, skip for unit tests
+  const testPath = expect.getState().testPath || '';
+  const isUnitTest = testPath.includes('/unit/');
+
+  if (!isUnitTest) {
+    await prisma.$disconnect();
+  }
 });
 
 async function resetTestDatabase() {
@@ -49,8 +64,8 @@ async function resetTestDatabase() {
     });
 
     // Clean all test data manually (reverse dependency order)
-    // SWAP data cleanup
-    await prisma.swapReturnReason.deleteMany();
+    // SWAP data cleanup (reverse dependency order)
+    await prisma.swapAddress.deleteMany();
     await prisma.swapProduct.deleteMany();
     await prisma.swapReturn.deleteMany();
     await prisma.swapStore.deleteMany();
@@ -66,8 +81,8 @@ async function resetTestDatabase() {
   } catch (error) {
     console.log('⚠️ Database setup issue, continuing with clean-only approach');
     // If migration fails, just clean the data (reverse dependency order)
-    // SWAP data cleanup
-    await prisma.swapReturnReason.deleteMany();
+    // SWAP data cleanup (reverse dependency order)
+    await prisma.swapAddress.deleteMany();
     await prisma.swapProduct.deleteMany();
     await prisma.swapReturn.deleteMany();
     await prisma.swapStore.deleteMany();

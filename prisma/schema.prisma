@@ -164,6 +164,8 @@ model SwapReturn {
   type             String // JSON array as string: ["Exchange", "Refund"]
   status           String // Closed, Processing, Pending, etc.
   shippingStatus   String @map("shipping_status")
+  deliveryStatus   String? @map("delivery_status") // Label-Created, Delivered, etc.
+  returnStatus     String? @map("return_status") // needs-review, processed, etc.
 
   // Financial Information
   total                              Decimal
@@ -184,6 +186,32 @@ model SwapReturn {
   totalTax         Decimal? @map("total_tax")
   totalDuty        Decimal? @map("total_duty")
   taxCurrency      String? @map("tax_currency")
+
+  // Additional SWAP API Fields
+  submittedAt              DateTime? @map("submitted_at")
+  dateClosed               DateTime? @map("date_closed")
+  deliveredDate            DateTime? @map("delivered_date")
+  shopifyOrderDate         DateTime? @map("shopify_order_date")
+  trackingNumber           String? @map("tracking_number")
+  shippingCarrier          String? @map("shipping_carrier")
+  processed                String? @map("processed")
+  processedBy              String? @map("processed_by")
+  qualityControlStatus     String? @map("quality_control_status")
+  orderAltType             String? @map("order_alt_type")
+  elapsedDaysPurchaseToReturn Int? @map("elapsed_days_purchase_to_return")
+  tags                     String? @map("tags") // JSON array as string
+  customerNationalId       String? @map("customer_national_id")
+  customerLocale           String? @map("customer_locale")
+
+  // Address Fields (flattened from billing_address and shipping_address)
+  billingCity              String? @map("billing_city")
+  billingCountryCode       String? @map("billing_country_code")
+  billingPostcode          String? @map("billing_postcode")
+  billingStateProvince     String? @map("billing_state_province")
+  shippingCity             String? @map("shipping_city")
+  shippingCountryCode      String? @map("shipping_country_code")
+  shippingPostcode         String? @map("shipping_postcode")
+  shippingStateProvince    String? @map("shipping_state_province")
 
   // Timestamps (from API)
   dateCreated      DateTime @map("date_created")
@@ -208,6 +236,13 @@ model SwapReturn {
   @@index([isMatched, shopifyOrderId])
   @@index([storeId, dateCreated])
   @@index([status, dateCreated])
+  @@index([deliveryStatus])
+  @@index([returnStatus])
+  @@index([deliveryStatus, returnStatus])
+  @@index([billingCountryCode])
+  @@index([shippingCountryCode])
+  @@index([billingCountryCode, billingCity])
+  @@index([shippingCountryCode, shippingCity])
 
   @@map("swap_returns")
 }
@@ -222,9 +257,36 @@ model SwapProduct {
   cost              Decimal
   returnType        String @map("return_type")
 
+  // Complete SWAP API Product Fields
+  shopifyVariantId     String? @map("shopify_variant_id")
+  orderNumber          String? @map("order_number")
+  originalOrderName    String? @map("original_order_name")
+  variantName          String? @map("variant_name")
+  fullSkuDescription   String? @map("full_sku_description")
+  mainReasonId         String? @map("main_reason_id")
+  mainReasonText       String? @map("main_reason_text")
+  subReasonId          String? @map("sub_reason_id")
+  subReasonText        String? @map("sub_reason_text")
+  comments             String? @map("comments")
+  currency             String? @map("currency")
+  vendor               String? @map("vendor")
+  collections          String? @map("collections") // JSON array as string
+  productAltType       String? @map("product_alt_type")
+  grams                Int? @map("grams")
+  intakeReason         String? @map("intake_reason")
+  tags                 String? @map("tags")
+  isFaulty             Boolean @default(false) @map("is_faulty")
+
   // Relationships
   returnId          String @map("return_id")
   return            SwapReturn @relation(fields: [returnId], references: [id])
+
+  // Performance indexes
+  @@index([mainReasonText])
+  @@index([productAltType])
+  @@index([returnType])
+  @@index([vendor])
+  @@index([returnId, mainReasonText])
 
   @@map("swap_products")
 }

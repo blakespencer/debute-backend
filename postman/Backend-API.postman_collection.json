@@ -394,9 +394,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/swap/analytics/total-refunds",
+              "raw": "{{baseUrl}}/swap/total-refunds",
               "host": ["{{baseUrl}}"],
-              "path": ["swap", "analytics", "total-refunds"]
+              "path": ["swap", "total-refunds"]
             }
           },
           "response": []
@@ -407,9 +407,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/swap/analytics/total-refunds?fromDate=2024-01-01&toDate=2024-12-31",
+              "raw": "{{baseUrl}}/swap/total-refunds?fromDate=2024-01-01&toDate=2024-12-31",
               "host": ["{{baseUrl}}"],
-              "path": ["swap", "analytics", "total-refunds"],
+              "path": ["swap", "total-refunds"],
               "query": [
                 {
                   "key": "fromDate",
@@ -430,9 +430,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/swap/analytics/returns-by-product",
+              "raw": "{{baseUrl}}/swap/returns-by-product",
               "host": ["{{baseUrl}}"],
-              "path": ["swap", "analytics", "returns-by-product"],
+              "path": ["swap", "returns-by-product"],
               "query": [
                 {
                   "key": "store",
@@ -449,9 +449,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/swap/analytics/return-reasons",
+              "raw": "{{baseUrl}}/swap/return-reasons",
               "host": ["{{baseUrl}}"],
-              "path": ["swap", "analytics", "return-reasons"],
+              "path": ["swap", "return-reasons"],
               "query": [
                 {
                   "key": "store",
@@ -468,9 +468,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/swap/analytics/return-rates",
+              "raw": "{{baseUrl}}/swap/return-rates",
               "host": ["{{baseUrl}}"],
-              "path": ["swap", "analytics", "return-rates"],
+              "path": ["swap", "return-rates"],
               "query": [
                 {
                   "key": "store",
@@ -487,9 +487,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/swap/analytics/return-rates?fromDate=2024-01-01&toDate=2024-12-31",
+              "raw": "{{baseUrl}}/swap/return-rates?fromDate=2024-01-01&toDate=2024-12-31",
               "host": ["{{baseUrl}}"],
-              "path": ["swap", "analytics", "return-rates"],
+              "path": ["swap", "return-rates"],
               "query": [
                 {
                   "key": "fromDate",
@@ -498,6 +498,188 @@
                 {
                   "key": "toDate",
                   "value": "2024-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Combined Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Combined Analytics (Date Range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swap/analytics?fromDate=2024-01-01&toDate=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["swap", "analytics"],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Matching",
+      "description": "Return-to-Order matching operations for analytics",
+      "item": [
+        {
+          "name": "Match SWAP Returns to Shopify Orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 100,\n  \"dryRun\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matching/swap-shopify",
+              "host": ["{{baseUrl}}"],
+              "path": ["matching", "swap-shopify"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Match SWAP Returns (Dry Run)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 50,\n  \"dryRun\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matching/swap-shopify",
+              "host": ["{{baseUrl}}"],
+              "path": ["matching", "swap-shopify"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Match Specific Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batchSize\": 100,\n  \"dryRun\": false,\n  \"storeId\": \"store-id-here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matching/swap-shopify",
+              "host": ["{{baseUrl}}"],
+              "path": ["matching", "swap-shopify"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Matching Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matching/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["matching", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Matching Stats for Store",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matching/stats?storeId=store-id-here",
+              "host": ["{{baseUrl}}"],
+              "path": ["matching", "stats"],
+              "query": [
+                {
+                  "key": "storeId",
+                  "value": "store-id-here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unmatched Returns",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matching/unmatched?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["matching", "unmatched"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unmatched Returns for Store",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matching/unmatched?limit=50&storeId=store-id-here",
+              "host": ["{{baseUrl}}"],
+              "path": ["matching", "unmatched"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "storeId",
+                  "value": "store-id-here"
                 }
               ]
             }

@@ -66,7 +66,7 @@ export interface ShopifyOrdersResponse {
 
 export interface SyncOptions {
   storeId: string;
-  since?: Date;
+  fromDate?: Date;
   limit?: number;
 }
 

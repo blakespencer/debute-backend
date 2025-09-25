@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { ShopifyService } from './shopify.service';
-import { PrismaClient } from '@prisma/client';
+import { Request, Response, NextFunction } from "express";
+import { ShopifyService } from "./shopify.service";
+import { PrismaClient } from "@prisma/client";
 
 export class ShopifyController {
   private service: ShopifyService;
@@ -11,10 +11,10 @@ export class ShopifyController {
 
   syncOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { since, limit } = req.body;
+      const { fromDate, limit } = req.body;
 
       const result = await this.service.syncOrders({
-        since: since ? new Date(since) : undefined,
+        fromDate: fromDate ? new Date(fromDate) : undefined,
         limit: limit ? parseInt(limit) : undefined,
       });
 

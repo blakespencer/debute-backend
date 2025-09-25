@@ -42,7 +42,7 @@ export class ShopifyService {
   }
 
   async syncOrders(
-    options: { since?: Date; limit?: number } = {}
+    options: { fromDate?: Date; limit?: number } = {}
   ): Promise<SyncResult> {
     const store = await this.ensureStoreExists();
 

@@ -30,11 +30,12 @@ export interface SwapReturn {
   // Order Details
   order_name: string;
   order_id: string;
-  rma: string; // RMA ID
+  rma: string;
   date_created: string;
   date_updated: string;
+  submitted_at?: string;
   type_string: string;
-  type: string[]; // Array of types like ["Exchange", "Refund"]
+  type: string[];
   delivery_status: string;
   return_status: string;
 
@@ -51,20 +52,34 @@ export interface SwapReturn {
   total_credit_exchange_value: number;
   total_refund_value_customer_currency: number;
 
-  // Customer Information (optional)
+  // Customer Information
   customer_name?: string;
   customer_currency?: string;
+  customer_national_id?: string;
+  customer_locale?: string;
 
-  // Product Information (optional)
+  // Shipping Information
+  shipping_carrier?: string;
+  tracking_number?: string;
+  tags?: string;
+
+  // Processing Information
+  processed?: string;
+  processed_by?: string;
+  quality_control_status?: string;
+  delivered_date?: string;
+  date_closed?: string;
+  elapsed_days_purchase_to_return?: number;
+  shopify_order_date?: string;
+
+  // Product Information
   products?: SwapProduct[];
 
-  // Return Reasons (optional)
-  return_reasons?: SwapReturnReason[];
-
-  // Address Information (optional)
+  // Address Information
   billing_address?: SwapBillingAddress;
+  shipping_address?: SwapShippingAddress;
 
-  // Tax Information (optional)
+  // Tax Information
   tax_information?: SwapTaxDutyInfo;
 }
 
@@ -76,24 +91,56 @@ export interface SwapProduct {
   item_count: number;
   cost: number;
   return_type: string;
+
+  // Return Reason Fields (now in products per API)
+  main_reason_id?: string;
+  main_reason_text?: string;
+  sub_reason_id?: string;
+  sub_reason_text?: string;
+  comments?: string;
+
+  // Rich Product Metadata
+  shopify_variant_id?: string;
+  order_number?: string;
+  original_order_name?: string;
+  variant_name?: string;
+  full_sku_description?: string;
+  currency?: string;
+  vendor?: string;
+  product_alt_type?: string;
+  grams?: number;
+  intake_reason?: string;
+  tags?: string;
+  is_faulty?: boolean;
+  collection?: string[];
 }
 
 export interface SwapReturnReason {
-  reason: string;
-  item_count: number;
+  main_reason_id?: string;
+  main_reason_text?: string;
+  sub_reason_id?: string;
+  sub_reason_text?: string;
+  comments?: string;
 }
 
 export interface SwapBillingAddress {
-  first_name: string;
-  last_name: string;
+  name?: string;
   address1: string;
   address2?: string;
   city: string;
-  province: string;
-  country: string;
-  zip: string;
-  company?: string;
-  phone?: string;
+  state_province_code?: string;
+  country_code: string;
+  postcode: string;
+}
+
+export interface SwapShippingAddress {
+  name?: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state_province_code?: string;
+  country_code: string;
+  postcode: string;
 }
 
 export interface SwapTaxDutyInfo {

@@ -15,6 +15,11 @@ import {
   SwapRateLimitError,
 } from "./swap.errors";
 import { createLogger } from "../../common/logger";
+import { parseSwapDates, parseSwapDate } from "./utils/swap-date.utils";
+import {
+  extractDenormalizedAddresses,
+  createNormalizedAddresses
+} from "./utils/swap-address.utils";
 
 export class SwapSyncService {
   private repository: SwapRepository;
@@ -161,32 +166,36 @@ export class SwapSyncService {
       apiReturn.return_id
     );
 
-    // Helper to safely convert strings to Decimal
-    const toDecimal = (
-      value: number | string | undefined
-    ): Decimal | undefined => {
-      if (value === undefined || value === null) return undefined;
-      return new Decimal(value.toString());
-    };
+    // Parse dates using utility function
+    const dates = parseSwapDates({
+      date_created: apiReturn.date_created,
+      date_updated: apiReturn.date_updated,
+      submitted_at: apiReturn.submitted_at,
+      date_closed: apiReturn.date_closed,
+      shopify_order_date: apiReturn.shopify_order_date,
+    });
 
-    // Helper to safely parse dates
-    const parseDate = (dateString: string): Date => {
-      return new Date(dateString);
-    };
+    // Parse deliveredDate separately using the same utility
+    const deliveredDate = parseSwapDate(apiReturn.delivered_date);
+
+    // Process addresses using utility functions
+    const denormalizedAddresses = extractDenormalizedAddresses(
+      apiReturn.billing_address,
+      apiReturn.shipping_address
+    );
 
     // Try to link to Shopify order if order_id is provided
     let shopifyOrderId: string | undefined;
     if (apiReturn.order_id) {
-      // Try to find matching Shopify order by original order ID
       const shopifyOrder = await this.prisma.shopifyOrder.findFirst({
         where: {
           OR: [
             { legacyResourceId: apiReturn.order_id },
-            { name: apiReturn.order_id }, // Sometimes order_id might be the order name
+            { name: apiReturn.order_id },
           ],
         },
       });
-      shopifyOrderId = shopifyOrder?.id;
+      shopifyOrderId = shopifyOrder?.shopifyOrderId;
     }
 
     const returnData = {
@@ -203,67 +212,87 @@ export class SwapSyncService {
         ? JSON.stringify(apiReturn.type)
         : apiReturn.type_string,
       status: apiReturn.return_status,
-      shippingStatus: apiReturn.delivery_status,
+      deliveryStatus: apiReturn.delivery_status,
+      returnStatus: apiReturn.return_status,
+      shippingStatus: apiReturn.delivery_status, // Keep legacy field for now
 
-      // Financial Information - all required in schema
-      total: toDecimal(apiReturn.total) || new Decimal(0),
-      handlingFee: toDecimal(apiReturn.handling_fee) || new Decimal(0),
-      shopNowRevenue: toDecimal(apiReturn.shop_now_revenue) || new Decimal(0),
-      shopLaterRevenue:
-        toDecimal(apiReturn.shop_later_revenue) || new Decimal(0),
-      exchangeRevenue: toDecimal(apiReturn.exchange_revenue) || new Decimal(0),
-      refundRevenue: toDecimal(apiReturn.refund_revenue) || new Decimal(0),
-      totalAdditionalPayment:
-        toDecimal(apiReturn.total_additional_payment) || new Decimal(0),
-      totalCreditExchangeValue:
-        toDecimal(apiReturn.total_credit_exchange_value) || new Decimal(0),
-      totalRefundValueCustomerCurrency:
-        toDecimal(apiReturn.total_refund_value_customer_currency) ||
-        new Decimal(0),
+      // Financial Information
+      total: this.toDecimal(apiReturn.total),
+      handlingFee: this.toDecimal(apiReturn.handling_fee),
+      shopNowRevenue: this.toDecimal(apiReturn.shop_now_revenue),
+      shopLaterRevenue: this.toDecimal(apiReturn.shop_later_revenue),
+      exchangeRevenue: this.toDecimal(apiReturn.exchange_revenue),
+      refundRevenue: this.toDecimal(apiReturn.refund_revenue),
+      totalAdditionalPayment: this.toDecimal(apiReturn.total_additional_payment),
+      totalCreditExchangeValue: this.toDecimal(apiReturn.total_credit_exchange_value),
+      totalRefundValueCustomerCurrency: this.toDecimal(apiReturn.total_refund_value_customer_currency),
 
       // Customer Information
       customerName: apiReturn.customer_name,
       customerCurrency: apiReturn.customer_currency,
+      customerNationalId: apiReturn.customer_national_id,
+      customerLocale: apiReturn.customer_locale,
+
+      // Shipping Information
+      shippingCarrier: apiReturn.shipping_carrier,
+      trackingNumber: apiReturn.tracking_number,
+      tags: apiReturn.tags,
+
+      // Processing Information
+      processed: apiReturn.processed,
+      processedBy: apiReturn.processed_by,
+      qualityControlStatus: apiReturn.quality_control_status,
+      deliveredDate: deliveredDate,
+      elapsedDaysPurchaseToReturn: apiReturn.elapsed_days_purchase_to_return,
 
       // Tax Information
       totalTax: apiReturn.tax_information?.total_tax
-        ? toDecimal(apiReturn.tax_information.total_tax)
+        ? this.toDecimal(apiReturn.tax_information.total_tax)
         : undefined,
       totalDuty: apiReturn.tax_information?.total_duty
-        ? toDecimal(apiReturn.tax_information.total_duty)
+        ? this.toDecimal(apiReturn.tax_information.total_duty)
         : undefined,
       taxCurrency: apiReturn.tax_information?.currency,
 
-      // Timestamps
-      dateCreated: parseDate(apiReturn.date_created),
-      dateUpdated: parseDate(apiReturn.date_updated),
+      // Denormalized address fields for fast queries
+      ...denormalizedAddresses,
+
+      // Parsed timestamps
+      dateCreated: dates.dateCreated || new Date(),
+      dateUpdated: dates.dateUpdated || new Date(),
+      submittedAt: dates.submittedAt,
+      dateClosed: dates.dateClosed,
+      shopifyOrderDate: dates.shopifyOrderDate,
     };
 
     let savedReturn;
     if (existingReturn) {
-      // Update existing return
       savedReturn = await this.repository.updateReturn(
         apiReturn.return_id,
         returnData
       );
     } else {
-      // Create new return
       savedReturn = await this.repository.createReturn(returnData);
     }
 
-    // Process products (SWAP API uses products, not line_items)
+    // Address processing removed - SwapAddress model no longer exists
+    // Address data is now denormalized and stored directly on SwapReturn
+    // const normalizedAddresses = createNormalizedAddresses(
+    //   apiReturn.billing_address,
+    //   apiReturn.shipping_address
+    // );
+
+    // Process products (return reasons are now in products)
     if (apiReturn.products) {
       for (const product of apiReturn.products) {
         await this.processProduct(product, savedReturn.id);
       }
     }
+  }
 
-    // Process return reasons
-    if (apiReturn.return_reasons) {
-      for (const reason of apiReturn.return_reasons) {
-        await this.processReturnReason(reason, savedReturn.id);
-      }
-    }
+  private toDecimal(value: number | string | undefined): Decimal {
+    if (value === undefined || value === null) return new Decimal(0);
+    return new Decimal(value.toString());
   }
 
   private async processProduct(
@@ -276,32 +305,37 @@ export class SwapSyncService {
       productName: apiProduct.product_name,
       sku: apiProduct.sku,
       itemCount: apiProduct.item_count,
-      cost: new Decimal(apiProduct.cost.toString()),
+      cost: this.toDecimal(apiProduct.cost),
       returnType: apiProduct.return_type,
+
+      // Complete SWAP API Product Fields
+      shopifyVariantId: apiProduct.shopify_variant_id || null,
+      orderNumber: apiProduct.order_number || null,
+      originalOrderName: apiProduct.original_order_name || null,
+      variantName: apiProduct.variant_name || null,
+      fullSkuDescription: apiProduct.full_sku_description || null,
+      mainReasonId: apiProduct.main_reason_id || null,
+      mainReasonText: apiProduct.main_reason_text || null,
+      subReasonId: apiProduct.sub_reason_id || null,
+      subReasonText: apiProduct.sub_reason_text || null,
+      comments: apiProduct.comments || null,
+      currency: apiProduct.currency || null,
+      vendor: apiProduct.vendor || null,
+      collections: apiProduct.collection ? JSON.stringify(apiProduct.collection) : null,
+      productAltType: apiProduct.product_alt_type || null,
+      grams: apiProduct.grams || null,
+      intakeReason: apiProduct.intake_reason || null,
+      tags: apiProduct.tags || null,
+      isFaulty: apiProduct.is_faulty || false,
       returnId,
     };
 
-    // For now, create new products each time (can optimize later with upsert)
+    // Create new product (can optimize later with upsert)
     await this.prisma.swapProduct.create({
       data: productData,
     });
   }
 
-  private async processReturnReason(
-    apiReason: any,
-    returnId: string
-  ): Promise<void> {
-    const reasonData = {
-      reason: apiReason.reason,
-      itemCount: apiReason.item_count,
-      returnId,
-    };
-
-    // For now, create new reasons each time (can optimize later with upsert)
-    await this.prisma.swapReturnReason.create({
-      data: reasonData,
-    });
-  }
 
   async testStoreConnection(storeId: string): Promise<boolean> {
     return this.logger.time(

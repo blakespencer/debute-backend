@@ -247,14 +247,14 @@ export class ShopifyClient {
   async fetchOrders(options: {
     first?: number;
     after?: string;
-    since?: string;
+    fromDate?: string;
   } = {}): Promise<ShopifyOrdersResponse> {
-    const { first = 50, after, since } = options;
+    const { first = 50, after, fromDate } = options;
 
     return this.logger.time('fetchOrders', async () => {
       let query = '';
-      if (since) {
-        query = `created_at:>='${since}'`;
+      if (fromDate) {
+        query = `created_at:>='${fromDate}'`;
       }
 
       const graphqlQuery = `
@@ -358,7 +358,7 @@ export class ShopifyClient {
       this.logger.debug('Executing GraphQL query', {
         operation: 'fetchOrders',
         variables: { first, after, query },
-        since
+        fromDate
       });
 
       return this.fetchWithRetry<ShopifyOrdersResponse>(
@@ -373,7 +373,7 @@ export class ShopifyClient {
         },
         'fetchOrders'
       );
-    }, { first, after, since });
+    }, { first, after, fromDate });
   }
 
   async testConnection(): Promise<boolean> {

@@ -19,7 +19,7 @@ export const testHelpers = {
   async cleanDatabase() {
     // Delete in reverse dependency order to avoid foreign key constraints
     // SWAP data cleanup
-    await prisma.swapReturnReason.deleteMany();
+    await prisma.swapAddress.deleteMany();
     await prisma.swapProduct.deleteMany();
     await prisma.swapReturn.deleteMany();
     await prisma.swapStore.deleteMany();
@@ -145,34 +145,7 @@ export const testHelpers = {
       },
     });
 
-    // Create return reasons for each return
-    await prisma.swapReturnReason.create({
-      data: {
-        ...swapFixtures.swapReturnReasons[0],
-        returnId: return1.id,
-      },
-    });
-
-    await prisma.swapReturnReason.create({
-      data: {
-        ...swapFixtures.swapReturnReasons[1],
-        returnId: return2.id,
-      },
-    });
-
-    await prisma.swapReturnReason.create({
-      data: {
-        ...swapFixtures.swapReturnReasons[2],
-        returnId: return2.id,
-      },
-    });
-
-    await prisma.swapReturnReason.create({
-      data: {
-        ...swapFixtures.swapReturnReasons[3],
-        returnId: return3.id,
-      },
-    });
+    // Return reasons are now stored in products, no separate table needed
 
     return {
       swapStore,

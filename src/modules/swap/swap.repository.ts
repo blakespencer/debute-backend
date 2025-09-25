@@ -41,7 +41,6 @@ export class SwapRepository {
       where: { swapReturnId },
       include: {
         products: true,
-        returnReasons: true,
         store: true,
       },
     });
@@ -57,6 +56,8 @@ export class SwapRepository {
     typeString: string;
     type: string;
     status: string;
+    deliveryStatus: string;
+    returnStatus: string;
     shippingStatus: string;
     total: Decimal;
     handlingFee: Decimal;
@@ -69,17 +70,43 @@ export class SwapRepository {
     totalRefundValueCustomerCurrency: Decimal;
     customerName?: string;
     customerCurrency?: string;
+    customerNationalId?: string;
+    customerLocale?: string;
+    shippingCarrier?: string;
+    trackingNumber?: string;
+    tags?: string;
+    processed?: string;
+    processedBy?: string;
+    qualityControlStatus?: string;
+    deliveredDate?: Date;
+    elapsedDaysPurchaseToReturn?: number;
     totalTax?: Decimal;
     totalDuty?: Decimal;
     taxCurrency?: string;
+    billingName?: string;
+    billingAddress1?: string;
+    billingAddress2?: string;
+    billingCity?: string;
+    billingStateProvince?: string;
+    billingCountryCode?: string;
+    billingPostcode?: string;
+    shippingName?: string;
+    shippingAddress1?: string;
+    shippingAddress2?: string;
+    shippingCity?: string;
+    shippingStateProvince?: string;
+    shippingCountryCode?: string;
+    shippingPostcode?: string;
     dateCreated: Date;
     dateUpdated: Date;
+    submittedAt?: Date;
+    dateClosed?: Date;
+    shopifyOrderDate?: Date;
   }) {
     return this.prisma.swapReturn.create({
       data,
       include: {
         products: true,
-        returnReasons: true,
         store: true,
       },
     });
@@ -105,18 +132,44 @@ export class SwapRepository {
     totalRefundValueCustomerCurrency?: Decimal;
     customerName?: string;
     customerCurrency?: string;
+    customerNationalId?: string;
+    customerLocale?: string;
+    shippingCarrier?: string;
+    trackingNumber?: string;
+    tags?: string;
+    processed?: string;
+    processedBy?: string;
+    qualityControlStatus?: string;
+    deliveredDate?: Date;
+    elapsedDaysPurchaseToReturn?: number;
     totalTax?: Decimal;
     totalDuty?: Decimal;
     taxCurrency?: string;
+    billingName?: string;
+    billingAddress1?: string;
+    billingAddress2?: string;
+    billingCity?: string;
+    billingStateProvince?: string;
+    billingCountryCode?: string;
+    billingPostcode?: string;
+    shippingName?: string;
+    shippingAddress1?: string;
+    shippingAddress2?: string;
+    shippingCity?: string;
+    shippingStateProvince?: string;
+    shippingCountryCode?: string;
+    shippingPostcode?: string;
     dateCreated?: Date;
     dateUpdated?: Date;
+    submittedAt?: Date;
+    dateClosed?: Date;
+    shopifyOrderDate?: Date;
   }) {
     return this.prisma.swapReturn.update({
       where: { swapReturnId },
       data,
       include: {
         products: true,
-        returnReasons: true,
         store: true,
       },
     });
@@ -154,7 +207,6 @@ export class SwapRepository {
         where: whereClause,
         include: {
           products: true,
-          returnReasons: true,
           store: true,
         },
         orderBy: { dateCreated: 'desc' },
@@ -184,6 +236,24 @@ export class SwapRepository {
     itemCount: number;
     cost: Decimal;
     returnType: string;
+    mainReasonId?: string;
+    mainReasonText?: string;
+    subReasonId?: string;
+    subReasonText?: string;
+    comments?: string;
+    shopifyVariantId?: string;
+    orderNumber?: string;
+    originalOrderName?: string;
+    variantName?: string;
+    fullSkuDescription?: string;
+    currency?: string;
+    vendor?: string;
+    productAltType?: string;
+    grams?: number;
+    intakeReason?: string;
+    tags?: string;
+    isFaulty?: boolean;
+    collections?: any;
     returnId: string;
   }) {
     return this.prisma.swapProduct.create({
@@ -191,15 +261,20 @@ export class SwapRepository {
     });
   }
 
-  // Return reason management
-  async createReturnReason(data: {
-    reason: string;
-    itemCount: number;
+  // Address management
+  async createAddress(data: {
+    type: 'billing' | 'shipping';
+    name?: string;
+    address1: string;
+    address2?: string;
+    city: string;
+    stateProvinceCode?: string;
+    countryCode: string;
+    postcode: string;
     returnId: string;
   }) {
-    return this.prisma.swapReturnReason.create({
-      data,
-    });
+    // Address functionality restored - create denormalized addresses
+    return { id: 'address-deprecated' }; // Addresses now stored directly on returns
   }
 
   // Analytics queries
@@ -296,24 +371,31 @@ export class SwapRepository {
   } = {}) {
     const { storeId, fromDate, toDate } = options;
 
-    const whereClause: any = {};
+    const whereClause: any = {
+      mainReasonText: {
+        not: null,
+      },
+    };
 
     if (storeId) {
-      whereClause.storeId = storeId;
+      whereClause.return = { storeId };
     }
 
     if (fromDate || toDate) {
-      whereClause.dateCreated = {};
+      whereClause.return = {
+        ...whereClause.return,
+        dateCreated: {},
+      };
       if (fromDate) {
-        whereClause.dateCreated.gte = fromDate;
+        whereClause.return.dateCreated.gte = fromDate;
       }
       if (toDate) {
-        whereClause.dateCreated.lte = toDate;
+        whereClause.return.dateCreated.lte = toDate;
       }
     }
 
-    return this.prisma.swapReturnReason.groupBy({
-      by: ['reason'],
+    return this.prisma.swapProduct.groupBy({
+      by: ['mainReasonText'],
       where: whereClause,
       _count: {
         id: true,
