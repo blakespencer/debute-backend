@@ -142,3 +142,32 @@ export class ShopifyMaxRetriesError extends ShopifyApiError {
     this.lastError = lastError;
   }
 }
+
+/**
+ * Shopify data/repository errors
+ */
+export class ShopifyDataError extends AppError {
+  public readonly operation?: string;
+  public readonly entity?: string;
+  public readonly entityId?: string;
+
+  constructor(
+    message: string,
+    cause?: Error,
+    context?: {
+      operation?: string;
+      entity?: string;
+      entityId?: string;
+    }
+  ) {
+    super(message, 422);
+    this.name = 'ShopifyDataError';
+    this.operation = context?.operation;
+    this.entity = context?.entity;
+    this.entityId = context?.entityId;
+
+    if (cause) {
+      this.stack = `${this.stack}\nCaused by: ${cause.stack}`;
+    }
+  }
+}

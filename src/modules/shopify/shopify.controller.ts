@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { ShopifyService } from "./shopify.service";
+import { ShopifyService } from "./services/shopify.service";
 import { PrismaClient } from "@prisma/client";
 
 export class ShopifyController {
