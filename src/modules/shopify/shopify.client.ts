@@ -1,4 +1,9 @@
-import { ShopifyOrdersResponse } from './shopify.types';
+import {
+  ShopifyOrdersResponse,
+  ShopifyProductsResponse,
+  ShopifyCollectionsResponse,
+  ShopifyProductVariantsResponse
+} from './shopify.types';
 import {
   ShopifyApiError,
   ShopifyRateLimitError,
@@ -372,6 +377,212 @@ export class ShopifyClient {
           }),
         },
         'fetchOrders'
+      );
+    }, { first, after, fromDate });
+  }
+
+  async fetchProducts(options: {
+    first?: number;
+    after?: string;
+    fromDate?: string;
+  } = {}): Promise<ShopifyProductsResponse> {
+    const { first = 50, after, fromDate } = options;
+
+    return this.logger.time('fetchProducts', async () => {
+      let query = '';
+      if (fromDate) {
+        query = `created_at:>='${fromDate}'`;
+      }
+
+      const graphqlQuery = `
+        query GetProducts($first: Int!, $after: String, $query: String) {
+          products(first: $first, after: $after, query: $query) {
+            nodes {
+              id
+              legacyResourceId
+              title
+              handle
+              productType
+              vendor
+              description
+              descriptionHtml
+              status
+              publishedAt
+              tags
+              createdAt
+              updatedAt
+              variants(first: 250) {
+                nodes {
+                  id
+                  legacyResourceId
+                  title
+                  sku
+                  barcode
+                  position
+                  price
+                  compareAtPrice
+                  inventoryQuantity
+                  availableForSale
+                  inventoryPolicy
+                  taxable
+                  createdAt
+                  updatedAt
+                }
+              }
+              collections(first: 250) {
+                nodes {
+                  id
+                  legacyResourceId
+                  title
+                  handle
+                  description
+                  updatedAt
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      `;
+
+      this.logger.debug('Executing GraphQL query', {
+        operation: 'fetchProducts',
+        variables: { first, after, query },
+        fromDate
+      });
+
+      return this.fetchWithRetry<ShopifyProductsResponse>(
+        this.getApiUrl(),
+        {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            query: graphqlQuery,
+            variables: { first, after, query },
+          }),
+        },
+        'fetchProducts'
+      );
+    }, { first, after, fromDate });
+  }
+
+  async fetchCollections(options: {
+    first?: number;
+    after?: string;
+    fromDate?: string;
+  } = {}): Promise<ShopifyCollectionsResponse> {
+    const { first = 50, after, fromDate } = options;
+
+    return this.logger.time('fetchCollections', async () => {
+      let query = '';
+      if (fromDate) {
+        query = `updated_at:>='${fromDate}'`;
+      }
+
+      const graphqlQuery = `
+        query GetCollections($first: Int!, $after: String, $query: String) {
+          collections(first: $first, after: $after, query: $query) {
+            nodes {
+              id
+              legacyResourceId
+              title
+              handle
+              description
+              updatedAt
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      `;
+
+      this.logger.debug('Executing GraphQL query', {
+        operation: 'fetchCollections',
+        variables: { first, after, query },
+        fromDate
+      });
+
+      return this.fetchWithRetry<ShopifyCollectionsResponse>(
+        this.getApiUrl(),
+        {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            query: graphqlQuery,
+            variables: { first, after, query },
+          }),
+        },
+        'fetchCollections'
+      );
+    }, { first, after, fromDate });
+  }
+
+  async fetchProductVariants(options: {
+    first?: number;
+    after?: string;
+    fromDate?: string;
+  } = {}): Promise<ShopifyProductVariantsResponse> {
+    const { first = 50, after, fromDate } = options;
+
+    return this.logger.time('fetchProductVariants', async () => {
+      let query = '';
+      if (fromDate) {
+        query = `created_at:>='${fromDate}'`;
+      }
+
+      const graphqlQuery = `
+        query GetProductVariants($first: Int!, $after: String, $query: String) {
+          productVariants(first: $first, after: $after, query: $query) {
+            nodes {
+              id
+              legacyResourceId
+              title
+              sku
+              barcode
+              position
+              price
+              compareAtPrice
+              inventoryQuantity
+              availableForSale
+              inventoryPolicy
+              taxable
+              createdAt
+              updatedAt
+              product {
+                id
+                legacyResourceId
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      `;
+
+      this.logger.debug('Executing GraphQL query', {
+        operation: 'fetchProductVariants',
+        variables: { first, after, query },
+        fromDate
+      });
+
+      return this.fetchWithRetry<ShopifyProductVariantsResponse>(
+        this.getApiUrl(),
+        {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            query: graphqlQuery,
+            variables: { first, after, query },
+          }),
+        },
+        'fetchProductVariants'
       );
     }, { first, after, fromDate });
   }

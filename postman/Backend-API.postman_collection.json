@@ -140,7 +140,7 @@
     },
     {
       "name": "Shopify",
-      "description": "Shopify API - Backend handles all Shopify credentials internally",
+      "description": "Shopify API - Sync orders, products, collections, and variants. Backend handles all Shopify credentials internally",
       "item": [
         {
           "name": "Test Shopify Connection",
@@ -156,7 +156,7 @@
           "response": []
         },
         {
-          "name": "Sync Orders",
+          "name": "Sync All (Orders + Products + Collections)",
           "request": {
             "method": "POST",
             "header": [
@@ -178,7 +178,7 @@
           "response": []
         },
         {
-          "name": "Sync Orders Since Date",
+          "name": "Sync All Since Date",
           "request": {
             "method": "POST",
             "header": [
@@ -195,6 +195,185 @@
               "raw": "{{baseUrl}}/shopify/sync",
               "host": ["{{baseUrl}}"],
               "path": ["shopify", "sync"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Orders Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shopify/sync/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "sync", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Products Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shopify/sync/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "sync", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Products Since Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromDate\": \"2024-01-01T00:00:00Z\",\n  \"limit\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shopify/sync/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "sync", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Collections Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shopify/sync/collections",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "sync", "collections"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Collections Since Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromDate\": \"2024-01-01T00:00:00Z\",\n  \"limit\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shopify/sync/collections",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "sync", "collections"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Synced Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shopify/products?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "products"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Synced Collections",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shopify/collections?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "collections"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product Variants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shopify/variants?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["shopify", "variants"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
             }
           },
           "response": []

@@ -39,6 +39,8 @@ model ShopifyStore {
   updatedAt   DateTime @updatedAt
   
   orders      ShopifyOrder[]
+  products    ShopifyProduct[]    // ADD THIS
+  collections ShopifyCollection[] // ADD THIS
 }
 
 model ShopifyOrder {
@@ -131,8 +133,124 @@ model ShopifyLineItem {
   // Relationships
   orderId           String @map("order_id")
   order             ShopifyOrder @relation(fields: [orderId], references: [id])
+
+  productVariantId  String? @map("product_variant_id")
+  productVariant    ShopifyProductVariant? @relation(fields: [productVariantId], references: [id])
   
   @@map("shopify_line_items")
+}
+
+model ShopifyProduct {
+  id              String @id @default(cuid())
+  shopifyProductId String @unique @map("shopify_product_id") 
+  legacyResourceId String @map("legacy_resource_id")        
+  
+  // Core product info
+  title           String
+  handle          String // URL handle
+  productType     String? @map("product_type") // "Dresses", "Accessories", etc.
+  vendor          String?
+  
+  // Description & SEO
+  description     String? 
+  descriptionHtml String? @map("description_html") 
+  
+  // Status and visibility
+  status          String // ACTIVE, ARCHIVED, DRAFT
+  publishedAt     DateTime? @map("published_at")
+  
+  // Categorization
+  tags            String? // JSON array as string
+  
+  // Dates
+  createdAt       DateTime @map("created_at")
+  updatedAt       DateTime @updatedAt
+  
+  // Relationships
+  storeId         String @map("store_id")
+  store           ShopifyStore @relation(fields: [storeId], references: [id])
+  variants        ShopifyProductVariant[]
+  collections     ShopifyProductCollection[]
+  
+  // Indexes for analytics
+  @@index([productType])
+  @@index([vendor])
+  @@index([status])
+  @@index([createdAt])
+  @@index([storeId, productType])
+  
+  @@map("shopify_products")
+}
+
+model ShopifyProductVariant {
+  id                String @id @default(cuid())
+  shopifyVariantId  String @unique @map("shopify_variant_id")
+  legacyResourceId  String @map("legacy_resource_id")       
+  
+  // Variant details
+  title             String // "Black / XS"
+  sku               String?
+  barcode          String?
+  position          Int // Order in variant list
+  
+  // Pricing (in shop's default currency)
+  price            Decimal
+  compareAtPrice   Decimal? @map("compare_at_price")
+  
+  // Inventory
+  inventoryQuantity Int? @map("inventory_quantity")
+  availableForSale Boolean @default(true) @map("available_for_sale")
+  inventoryPolicy  String @map("inventory_policy") // DENY or CONTINUE
+  
+  // Tax
+  taxable          Boolean @default(true)
+  
+  // Dates
+  createdAt        DateTime @map("created_at")
+  updatedAt        DateTime @updatedAt
+  
+  // Relationships
+  productId        String @map("product_id")
+  product          ShopifyProduct @relation(fields: [productId], references: [id])
+  lineItems        ShopifyLineItem[]
+  
+  @@index([sku])
+  @@index([productId])
+  @@index([availableForSale])
+  @@index([price])
+  
+  @@map("shopify_product_variants")
+}
+
+model ShopifyCollection {
+  id                String @id @default(cuid())
+  shopifyCollectionId String @unique @map("shopify_collection_id")
+  legacyResourceId  String @map("legacy_resource_id")
+  
+  title             String
+  handle            String
+  description       String?
+  updatedAt         DateTime @updatedAt // Only updatedAt exists
+  
+  // Relationships
+  storeId           String @map("store_id")
+  store             ShopifyStore @relation(fields: [storeId], references: [id])
+  products          ShopifyProductCollection[]
+  
+  @@map("shopify_collections")
+}
+
+model ShopifyProductCollection {
+  id           String @id @default(cuid())
+  
+  productId    String @map("product_id")
+  product      ShopifyProduct @relation(fields: [productId], references: [id])
+  
+  collectionId String @map("collection_id")  
+  collection   ShopifyCollection @relation(fields: [collectionId], references: [id])
+  
+  @@unique([productId, collectionId])
+  @@map("shopify_product_collections")
 }
 
 // SWAP Returns Platform Integration
@@ -154,8 +272,9 @@ model SwapReturn {
   id               String @id @default(cuid())
   swapReturnId     String @unique @map("swap_return_id") // return_id from API
   orderName        String @map("order_name")
-  shopifyOrderId   String @map("shopify_order_id") // SWAP's order_id IS the Shopify order ID
+  orderId          String @map("order_id")
   rma              String // RMA ID
+  shopifyOrderId   String @map("shopify_order_id") // Link to our Shopify orders table
   isMatched        Boolean @default(false) @map("is_matched") // Whether return is matched to Shopify order
 
   // Return Classification

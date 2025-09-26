@@ -52,6 +52,52 @@ export class ShopifyService {
     });
   }
 
+  async syncProducts(
+    options: { fromDate?: Date; limit?: number } = {}
+  ): Promise<SyncResult> {
+    const store = await this.ensureStoreExists();
+
+    return this.syncService.syncProducts({
+      storeId: store.id,
+      ...options,
+    });
+  }
+
+  async syncCollections(
+    options: { fromDate?: Date; limit?: number } = {}
+  ): Promise<SyncResult> {
+    const store = await this.ensureStoreExists();
+
+    return this.syncService.syncCollections({
+      storeId: store.id,
+      ...options,
+    });
+  }
+
+  async syncAll(
+    options: { fromDate?: Date; limit?: number } = {}
+  ): Promise<{
+    orders: SyncResult;
+    products: SyncResult;
+    collections: SyncResult;
+  }> {
+    const store = await this.ensureStoreExists();
+
+    const syncOptions = {
+      storeId: store.id,
+      ...options,
+    };
+
+    // Run all syncs in parallel for better performance
+    const [orders, products, collections] = await Promise.all([
+      this.syncService.syncOrders(syncOptions),
+      this.syncService.syncProducts(syncOptions),
+      this.syncService.syncCollections(syncOptions),
+    ]);
+
+    return { orders, products, collections };
+  }
+
   async testConnection(): Promise<{ connected: boolean }> {
     const store = await this.ensureStoreExists();
     const connected = await this.syncService.testStoreConnection(store.id);
@@ -74,6 +120,90 @@ export class ShopifyService {
 
     return {
       orders,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total,
+      },
+    };
+  }
+
+  async getProducts(options: { limit?: number; offset?: number } = {}) {
+    const { limit = 50, offset = 0 } = options;
+
+    const products = await this.prisma.shopifyProduct.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: "desc" },
+      include: {
+        variants: true,
+        collections: {
+          include: {
+            collection: true,
+          },
+        },
+      },
+    });
+
+    const total = await this.prisma.shopifyProduct.count();
+
+    return {
+      products,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total,
+      },
+    };
+  }
+
+  async getCollections(options: { limit?: number; offset?: number } = {}) {
+    const { limit = 50, offset = 0 } = options;
+
+    const collections = await this.prisma.shopifyCollection.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        products: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    const total = await this.prisma.shopifyCollection.count();
+
+    return {
+      collections,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total,
+      },
+    };
+  }
+
+  async getVariants(options: { limit?: number; offset?: number } = {}) {
+    const { limit = 50, offset = 0 } = options;
+
+    const variants = await this.prisma.shopifyProductVariant.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: "desc" },
+      include: {
+        product: true,
+      },
+    });
+
+    const total = await this.prisma.shopifyProductVariant.count();
+
+    return {
+      variants,
       pagination: {
         total,
         limit,

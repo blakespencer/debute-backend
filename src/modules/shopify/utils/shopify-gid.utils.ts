@@ -47,3 +47,12 @@ export function extractVariantId(variantGid: string): string {
 export function extractProductId(productGid: string): string {
   return extractIdFromGid(productGid);
 }
+
+/**
+ * Extract clean collection ID from Shopify collection GID
+ * @param collectionGid - Shopify collection GID: "gid://shopify/Collection/12345"
+ * @returns Clean collection ID: "12345"
+ */
+export function extractCollectionId(collectionGid: string): string {
+  return extractIdFromGid(collectionGid);
+}

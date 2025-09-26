@@ -3,6 +3,10 @@ import {
   ShopifyStore,
   ShopifyOrder,
   ShopifyLineItem,
+  ShopifyProduct,
+  ShopifyProductVariant,
+  ShopifyCollection,
+  ShopifyProductCollection,
 } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
@@ -145,6 +149,167 @@ export class ShopifyRepository {
   ): Promise<void> {
     await this.prisma.shopifyLineItem.createMany({
       data: lineItems,
+    });
+  }
+
+  // Product methods
+  async findProductByShopifyId(shopifyProductId: string): Promise<ShopifyProduct | null> {
+    return this.prisma.shopifyProduct.findUnique({
+      where: { shopifyProductId },
+    });
+  }
+
+  async createProduct(productData: {
+    shopifyProductId: string;
+    legacyResourceId: string;
+    title: string;
+    handle: string;
+    productType?: string;
+    vendor?: string;
+    description?: string;
+    descriptionHtml?: string;
+    status: string;
+    publishedAt?: Date;
+    tags?: string;
+    createdAt: Date;
+    updatedAt: Date;
+    storeId: string;
+  }): Promise<ShopifyProduct> {
+    return this.prisma.shopifyProduct.create({
+      data: productData,
+    });
+  }
+
+  async updateProduct(
+    shopifyProductId: string,
+    productData: Partial<{
+      title: string;
+      handle: string;
+      productType: string;
+      vendor: string;
+      description: string;
+      descriptionHtml: string;
+      status: string;
+      publishedAt: Date | null;
+      tags: string;
+      updatedAt: Date;
+    }>
+  ): Promise<ShopifyProduct> {
+    return this.prisma.shopifyProduct.update({
+      where: { shopifyProductId },
+      data: productData,
+    });
+  }
+
+  // Product Variant methods
+  async findVariantByShopifyId(shopifyVariantId: string): Promise<ShopifyProductVariant | null> {
+    return this.prisma.shopifyProductVariant.findUnique({
+      where: { shopifyVariantId },
+    });
+  }
+
+  async createVariant(variantData: {
+    shopifyVariantId: string;
+    legacyResourceId: string;
+    title: string;
+    sku?: string;
+    barcode?: string;
+    position: number;
+    price: Decimal;
+    compareAtPrice?: Decimal;
+    inventoryQuantity?: number;
+    availableForSale: boolean;
+    inventoryPolicy: string;
+    taxable: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    productId: string;
+  }): Promise<ShopifyProductVariant> {
+    return this.prisma.shopifyProductVariant.create({
+      data: variantData,
+    });
+  }
+
+  async updateVariant(
+    shopifyVariantId: string,
+    variantData: Partial<{
+      title: string;
+      sku: string;
+      barcode: string;
+      position: number;
+      price: Decimal;
+      compareAtPrice: Decimal | null;
+      inventoryQuantity: number | null;
+      availableForSale: boolean;
+      inventoryPolicy: string;
+      taxable: boolean;
+      updatedAt: Date;
+    }>
+  ): Promise<ShopifyProductVariant> {
+    return this.prisma.shopifyProductVariant.update({
+      where: { shopifyVariantId },
+      data: variantData,
+    });
+  }
+
+  async deleteVariantsByProductId(productId: string): Promise<void> {
+    await this.prisma.shopifyProductVariant.deleteMany({
+      where: { productId },
+    });
+  }
+
+  // Collection methods
+  async findCollectionByShopifyId(shopifyCollectionId: string): Promise<ShopifyCollection | null> {
+    return this.prisma.shopifyCollection.findUnique({
+      where: { shopifyCollectionId },
+    });
+  }
+
+  async createCollection(collectionData: {
+    shopifyCollectionId: string;
+    legacyResourceId: string;
+    title: string;
+    handle: string;
+    description?: string;
+    updatedAt: Date;
+    storeId: string;
+  }): Promise<ShopifyCollection> {
+    return this.prisma.shopifyCollection.create({
+      data: collectionData,
+    });
+  }
+
+  async updateCollection(
+    shopifyCollectionId: string,
+    collectionData: Partial<{
+      title: string;
+      handle: string;
+      description: string;
+      updatedAt: Date;
+    }>
+  ): Promise<ShopifyCollection> {
+    return this.prisma.shopifyCollection.update({
+      where: { shopifyCollectionId },
+      data: collectionData,
+    });
+  }
+
+  // Product-Collection relationship methods
+  async createProductCollection(productId: string, collectionId: string): Promise<ShopifyProductCollection> {
+    return this.prisma.shopifyProductCollection.create({
+      data: { productId, collectionId },
+    });
+  }
+
+  async deleteProductCollectionsByProductId(productId: string): Promise<void> {
+    await this.prisma.shopifyProductCollection.deleteMany({
+      where: { productId },
+    });
+  }
+
+  async findProductCollections(productId: string): Promise<ShopifyProductCollection[]> {
+    return this.prisma.shopifyProductCollection.findMany({
+      where: { productId },
     });
   }
 }
