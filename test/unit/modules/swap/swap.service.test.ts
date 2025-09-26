@@ -2,7 +2,7 @@
 import '../../../helpers/unit-test-setup';
 
 import { SwapService } from '../../../../src/modules/swap/swap.service';
-import { SwapRepository } from '../../../../src/modules/swap/swap.repository';
+import { SwapRepository } from '../../../../src/modules/swap/repositories/swap.repository';
 import { SwapSyncService } from '../../../../src/modules/swap/swap.sync.service';
 import { createMockPrisma } from '../../../helpers/mocks/prisma.mock';
 import { AppError } from '../../../../src/common/errors';

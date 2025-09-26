@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { SwapClient } from "./swap.client";
-import { SwapRepository } from "./swap.repository";
+import { SwapRepository } from "./repositories/swap.repository";
 import {
   SwapSyncOptions,
   SwapSyncResult,
@@ -189,6 +189,7 @@ export class SwapSyncService {
     const returnData = {
       swapReturnId: apiReturn.return_id,
       orderName: apiReturn.order_name,
+      orderId: apiReturn.order_id, // Required orderId field
       shopifyOrderId: apiReturn.order_id, // SWAP's order_id IS the Shopify order ID
       rma: apiReturn.rma,
       storeId,

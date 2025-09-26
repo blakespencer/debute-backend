@@ -63,36 +63,44 @@ async function resetTestDatabase() {
       }
     });
 
-    // Clean all test data manually (reverse dependency order)
-    // SWAP data cleanup (reverse dependency order)
-    await prisma.swapAddress.deleteMany();
+    // Clean all test data manually (correct foreign key order)
+    // Shopify data cleanup (children first, then parents)
+    await prisma.shopifyLineItem.deleteMany();
+    await prisma.shopifyProductVariant.deleteMany();
+    await prisma.shopifyProductCollection.deleteMany();
+    await prisma.shopifyProduct.deleteMany();
+    await prisma.shopifyCollection.deleteMany();
+    await prisma.shopifyOrder.deleteMany();
+    await prisma.shopifyStore.deleteMany();
+
+    // SWAP data cleanup (children first, then parents)
+    await prisma.swapReturnReason.deleteMany();
     await prisma.swapProduct.deleteMany();
     await prisma.swapReturn.deleteMany();
     await prisma.swapStore.deleteMany();
 
-    // Shopify data cleanup
-    await prisma.shopifyLineItem.deleteMany();
-    await prisma.shopifyOrder.deleteMany();
-    await prisma.shopifyStore.deleteMany();
-
-    // Basic orders cleanup
+    // Basic orders cleanup (no foreign keys)
     await prisma.order.deleteMany();
 
   } catch (error) {
     console.log('⚠️ Database setup issue, continuing with clean-only approach');
-    // If migration fails, just clean the data (reverse dependency order)
-    // SWAP data cleanup (reverse dependency order)
-    await prisma.swapAddress.deleteMany();
+    // If migration fails, just clean the data (correct foreign key order)
+    // Shopify data cleanup (children first, then parents)
+    await prisma.shopifyLineItem.deleteMany();
+    await prisma.shopifyProductVariant.deleteMany();
+    await prisma.shopifyProductCollection.deleteMany();
+    await prisma.shopifyProduct.deleteMany();
+    await prisma.shopifyCollection.deleteMany();
+    await prisma.shopifyOrder.deleteMany();
+    await prisma.shopifyStore.deleteMany();
+
+    // SWAP data cleanup (children first, then parents)
+    await prisma.swapReturnReason.deleteMany();
     await prisma.swapProduct.deleteMany();
     await prisma.swapReturn.deleteMany();
     await prisma.swapStore.deleteMany();
 
-    // Shopify data cleanup
-    await prisma.shopifyLineItem.deleteMany();
-    await prisma.shopifyOrder.deleteMany();
-    await prisma.shopifyStore.deleteMany();
-
-    // Basic orders cleanup
+    // Basic orders cleanup (no foreign keys)
     await prisma.order.deleteMany();
   }
 

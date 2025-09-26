@@ -15,7 +15,7 @@ export const swapFixtures = {
       orderName: '#1001',
       orderId: 'ORDER_001',
       rma: 'RMA001',
-      shopifyOrderId: null, // Will be linked in tests if needed
+      shopifyOrderId: 'SHOPIFY_ORDER_001', // Test Shopify order ID
       typeString: 'Refund',
       type: '["Refund"]',
       status: 'Closed',
@@ -42,7 +42,7 @@ export const swapFixtures = {
       orderName: '#1002',
       orderId: 'ORDER_002',
       rma: 'RMA002',
-      shopifyOrderId: null,
+      shopifyOrderId: 'SHOPIFY_ORDER_002',
       typeString: 'Exchange',
       type: '["Exchange"]',
       status: 'Processing',
@@ -69,7 +69,7 @@ export const swapFixtures = {
       orderName: '#1003',
       orderId: 'ORDER_003',
       rma: 'RMA003',
-      shopifyOrderId: null,
+      shopifyOrderId: 'SHOPIFY_ORDER_003',
       typeString: 'Refund',
       type: '["Refund"]',
       status: 'Closed',

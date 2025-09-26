@@ -1,7 +1,7 @@
 // Standard unit test setup - prevents database connections
 import '../../../helpers/unit-test-setup';
 
-import { SwapRepository } from '../../../../src/modules/swap/swap.repository';
+import { SwapRepository } from '../../../../src/modules/swap/repositories/swap.repository';
 import { createMockPrisma } from '../../../helpers/mocks/prisma.mock';
 import { Decimal } from '@prisma/client/runtime/library';
 

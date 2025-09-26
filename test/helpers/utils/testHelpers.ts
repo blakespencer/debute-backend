@@ -17,19 +17,23 @@ const prisma = new PrismaClient({
 export const testHelpers = {
   // Clean database - removes all test data (correct order for foreign keys)
   async cleanDatabase() {
-    // Delete in reverse dependency order to avoid foreign key constraints
-    // SWAP data cleanup
-    await prisma.swapAddress.deleteMany();
+    // Delete in correct dependency order to avoid foreign key constraints
+    // Shopify data cleanup (children first, then parents)
+    await prisma.shopifyLineItem.deleteMany();
+    await prisma.shopifyProductVariant.deleteMany();
+    await prisma.shopifyProductCollection.deleteMany();
+    await prisma.shopifyProduct.deleteMany();
+    await prisma.shopifyCollection.deleteMany();
+    await prisma.shopifyOrder.deleteMany();
+    await prisma.shopifyStore.deleteMany();
+
+    // SWAP data cleanup (children first, then parents)
+    await prisma.swapReturnReason.deleteMany();
     await prisma.swapProduct.deleteMany();
     await prisma.swapReturn.deleteMany();
     await prisma.swapStore.deleteMany();
 
-    // Shopify data cleanup
-    await prisma.shopifyLineItem.deleteMany();
-    await prisma.shopifyOrder.deleteMany();
-    await prisma.shopifyStore.deleteMany();
-
-    // Basic orders cleanup
+    // Basic orders cleanup (no foreign keys)
     await prisma.order.deleteMany();
   },
 

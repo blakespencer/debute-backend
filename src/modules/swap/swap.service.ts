@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { SwapRepository } from "./swap.repository";
+import { SwapRepository } from "./repositories/swap.repository";
 import { SwapSyncService } from "./swap.sync.service";
 import { SwapSyncResult, SwapQueryOptions } from "./swap.types";
 import { AppError } from "../../common/errors";

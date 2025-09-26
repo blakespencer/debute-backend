@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { SwapQueryOptions } from './swap.types';
+import { SwapQueryOptions } from '../swap.types';
 
 export class SwapRepository {
   constructor(private prisma: PrismaClient) {}
@@ -49,6 +49,7 @@ export class SwapRepository {
   async createReturn(data: {
     swapReturnId: string;
     orderName: string;
+    orderId: string;
     shopifyOrderId: string;
     rma: string;
     storeId: string;
