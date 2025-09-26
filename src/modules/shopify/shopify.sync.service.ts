@@ -92,7 +92,7 @@ export class ShopifySyncService {
                 result.ordersProcessed++;
 
                 const existingOrder =
-                  await this.repository.findOrderByShopifyId(order.id);
+                  await this.repository.findOrderByShopifyId(extractOrderId(order.id));
                 if (existingOrder) {
                   result.ordersUpdated++;
                 } else {
@@ -394,7 +394,7 @@ export class ShopifySyncService {
         : null,
     };
 
-    await this.repository.updateOrder(apiOrder.id, updateData);
+    await this.repository.updateOrder(extractOrderId(apiOrder.id), updateData);
 
     await this.repository.deleteLineItemsByOrderId(orderId);
 
